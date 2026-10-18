@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUMP VAMP — Find the Original. Expose the Bloodsuckers.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<!--
+==================== SETUP ====================
+1) Supabase SQL (run once):
+   create table hunts (
+     id bigint generated always as identity primary key,
+     term text not null, original_mint text, original_name text,
+     original_symbol text, vamp_count int default 0,
+     created_at timestamptz default now());
+   alter table hunts enable row level security;
+   create policy "read" on hunts for select using (true);
+   create policy "write" on hunts for insert with check (true);
+2) Fill SUPABASE_URL / SUPABASE_KEY below (anon key).
+3) pump.fun API often blocks browser CORS. If searches fail, deploy a tiny
+   Supabase Edge Function that fetches ?url=... and returns it with CORS
+   headers, then set PROXY to its URL.
+===============================================
+-->
+<style>
+:root{--blood:#b0001e;--blood2:#ff1a3c;--ink:#07030a;--panel:#12060d;--bone:#f1e6d8;--mute:#a58f92;--gold:#c9a24a}
+*{box-sizing:border-box;margin:0}
+html{background:var(--ink)}
+body{font-family:Inter,sans-serif;color:var(--bone);min-height:100vh;
+background:radial-gradient(ellipse at 50% -10%,#4a0716 0,#1a050c 40%,#07030a 75%) fixed;overflow-x:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 200px #000;z-index:5}
+.moon{position:fixed;top:-90px;right:8%;width:260px;height:260px;border-radius:50%;
+background:radial-gradient(circle at 35% 35%,#ffd9d9,#ff5a6e 45%,#8a0f25 80%);opacity:.35;filter:blur(2px);
+box-shadow:0 0 140px 40px #b0001e66;animation:pulse 6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.5;transform:scale(1.04)}}
+.bat{position:fixed;font-size:22px;opacity:.55;animation:fly 18s linear infinite;z-index:1;pointer-events:none}
+@keyframes fly{from{transform:translate(-80px,0)}25%{transform:translate(30vw,-40px) scaleY(.8)}50%{transform:translate(60vw,30px)}75%{transform:translate(85vw,-30px) scaleY(.8)}to{transform:translate(110vw,10px)}}
+header{text-align:center;padding:64px 20px 24px;position:relative;z-index:2}
+h1{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:clamp(40px,9vw,92px);letter-spacing:4px;
+background:linear-gradient(180deg,#ff4b64,#b0001e 60%,#5a0010);-webkit-background-clip:text;background-clip:text;color:transparent;
+filter:drop-shadow(0 4px 24px #b0001e99)}
+.sub{font-family:Cinzel,serif;color:var(--gold);letter-spacing:6px;font-size:13px;margin-top:6px;text-transform:uppercase}
+.tag{color:var(--mute);margin-top:14px;font-size:15px}
+.drips{height:46px;margin-top:10px;display:flex;justify-content:center;gap:0}
+.drips i{width:10px;background:linear-gradient(var(--blood2),var(--blood));border-radius:0 0 10px 10px;margin:0 14px;animation:drip 3.2s ease-in infinite;transform-origin:top}
+.drips i:nth-child(2n){animation-delay:.8s;margin-top:0}.drips i:nth-child(3n){animation-delay:1.6s}
+@keyframes drip{0%{height:0;opacity:1}60%{height:42px}100%{height:42px;opacity:0}}
+main{max-width:980px;margin:0 auto;padding:0 18px 80px;position:relative;z-index:2}
+.search{display:flex;gap:10px;background:#0c0409cc;border:1px solid #5a1020;border-radius:16px;padding:10px;backdrop-filter:blur(8px);
+box-shadow:0 0 50px #b0001e33}
+.search input{flex:1;background:transparent;border:0;outline:0;color:var(--bone);font-size:18px;padding:12px 14px;font-family:Inter}
+.search input::placeholder{color:#6b5358}
+button{cursor:pointer;border:0;font-family:Cinzel,serif;font-weight:600;letter-spacing:2px}
+.bite{background:linear-gradient(180deg,var(--blood2),var(--blood));color:#fff;padding:0 28px;border-radius:11px;font-size:15px;
+box-shadow:0 0 24px #ff1a3c66;transition:.2s}
+.bite:hover{transform:translateY(-1px);box-shadow:0 0 38px #ff1a3caa}.bite:disabled{opacity:.5}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 2px 0;align-items:center;color:var(--mute);font-size:13px}
+.chip{background:#1a0910;border:1px solid #3a1420;color:var(--bone);padding:5px 12px;border-radius:99px;font-size:12px;letter-spacing:1px}
+.chip:hover{border-color:var(--blood2)}
+.status{text-align:center;color:var(--mute);margin:40px 0;font-family:Cinzel,serif;letter-spacing:3px}
+.err{color:#ff7a8a}
+h2{font-family:Cinzel,serif;letter-spacing:5px;font-size:14px;color:var(--gold);margin:42px 0 14px;display:flex;align-items:center;gap:14px}
+h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#5a1020,transparent)}
+.orig{display:flex;gap:22px;align-items:center;background:linear-gradient(135deg,#1c0710,#0c0409);border:1px solid var(--gold);
+border-radius:20px;padding:24px;position:relative;box-shadow:0 0 60px #c9a24a22,inset 0 0 40px #b0001e22}
+.orig::before{content:"👑 THE ORIGINAL";position:absolute;top:-12px;left:22px;background:var(--ink);padding:0 12px;color:var(--gold);font-family:Cinzel;font-size:12px;letter-spacing:3px}
+.orig img{width:112px;height:112px;border-radius:16px;object-fit:cover;border:2px solid var(--gold);background:#000}
+.orig .n{font-family:'Cinzel Decorative';font-size:28px;font-weight:700}
+.orig .s{color:var(--blood2);font-weight:600;margin:2px 0 8px}
+.meta{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute);font-size:13px}.meta b{color:var(--bone)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.stat{background:#10060b;border:1px solid #2e101a;border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-family:Cinzel;font-size:26px;color:var(--blood2)}.stat span{font-size:11px;color:var(--mute);letter-spacing:2px}
+.list{display:grid;gap:10px}
+.v{display:grid;grid-template-columns:38px 56px 1fr auto;gap:14px;align-items:center;background:#0f060b;border:1px solid #2a0f18;border-radius:14px;
+padding:12px 16px;text-decoration:none;color:inherit;transition:.2s;animation:rise .4s both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.v:hover{border-color:var(--blood2);box-shadow:0 0 28px #b0001e55;transform:translateX(4px)}
+.v .i{font-family:Cinzel;color:#5d3a42;font-size:15px;text-align:center}
+.v img{width:56px;height:56px;border-radius:12px;object-fit:cover;background:#000}
+.v .t{font-weight:600}.v .t em{font-style:normal;color:var(--blood2);margin-left:8px;font-size:13px}
+.v .d{font-size:12px;color:var(--mute);margin-top:3px}
+.badge{font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:99px;font-family:Cinzel;font-weight:600;white-space:nowrap}
+.b-same{background:#b0001e;color:#fff}.b-tick{background:#7a1a55;color:#fff}.b-sim{background:#2b1a05;color:var(--gold);border:1px solid #5c4210}
+.right{text-align:right;display:grid;gap:6px;justify-items:end}.score{font-size:11px;color:var(--mute)}
+.more{display:block;margin:24px auto 0;background:transparent;border:1px solid var(--blood);color:var(--bone);padding:12px 30px;border-radius:11px}
+.more:hover{background:var(--blood)}
+.crypt{display:flex;gap:8px;flex-wrap:wrap}
+footer{text-align:center;color:#5d4a4e;font-size:12px;padding:30px;position:relative;z-index:2;letter-spacing:2px;font-family:Cinzel}
+@media(max-width:640px){.orig{flex-direction:column;text-align:center}.meta{justify-content:center}.v{grid-template-columns:30px 48px 1fr}.v .right{grid-column:2/4;justify-items:start;text-align:left}.search{flex-direction:column}.bite{padding:14px}}
+</style>
+</head>
+<body>
+<div class="moon"></div>
+<span class="bat" style="top:12%">🦇</span><span class="bat" style="top:30%;animation-delay:-7s;font-size:16px">🦇</span><span class="bat" style="top:55%;animation-delay:-12s">🦇</span>
+
+<header>
+  <h1>PUMP VAMP</h1>
+  <div class="sub">Every meta has an original</div>
+  <p class="tag">Search a name or ticker. We find the first-born — and every parasite that came after.</p>
+  <div class="drips"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</header>
+
+<main>
+  <div class="search">
+    <input id="q" placeholder="Name or $TICKER — e.g. pepe, bonk, goat…" autocomplete="off" autofocus>
+    <button class="bite" id="go">🩸 HUNT</button>
+  </div>
+  <div class="chips"><span>The Crypt (recent hunts):</span><span class="crypt" id="crypt"><span style="opacity:.5">empty…</span></span></div>
+  <div id="out"></div>
+</main>
+<footer>NOT FINANCIAL ADVICE · THE NIGHT IS DARK AND FULL OF RUGS</footer>
+
+<script>
+// ===== CONFIG =====
+const SUPABASE_URL = '';   // https://xxxx.supabase.co
+const SUPABASE_KEY = '';   // anon key
+const PROXY = '';          // optional: 'https://xxxx.supabase.co/functions/v1/pump-proxy?url='
+const API = 'https://frontend-api-v3.pump.fun/coins';
+const PAGE = 50;
+// ==================
+const $ = id => document.getElementById(id);
+const sb = (SUPABASE_URL && SUPABASE_KEY && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let state = {term:'', offset:0, coins:[], done:false};
+
+const norm = s => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function lev(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let p=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const sim = (a,b)=>{a=norm(a);b=norm(b);if(!a||!b)return 0;if(a===b)return 100;
+  if(a.includes(b)||b.includes(a))return 85;return Math.round(100*(1-lev(a,b)/Math.max(a.length,b.length)))};
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ago(ms){const s=Math.floor(Math.abs(ms)/1000);if(s<60)return s+'s';const m=Math.floor(s/60);if(m<60)return m+'m '+(s%60)+'s';
+  const h=Math.floor(m/60);if(h<24)return h+'h '+(m%60)+'m';const d=Math.floor(h/24);return d+'d '+(h%24)+'h'}
+const usd = n => n>=1e6?'$'+(n/1e6).toFixed(2)+'M':n>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Math.round(n||0);
+const ts = c => c.created_timestamp>1e12?c.created_timestamp:c.created_timestamp*1000;
+const img = c => esc(c.image_uri||'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#1a0910"/><text x="5" y="7" font-size="6" text-anchor="middle">🦇</text></svg>'));
+
+async function fetchPage(term, offset){
+  const u = `${API}?offset=${offset}&limit=${PAGE}&sort=created_timestamp&order=ASC&includeNsfw=true&searchTerm=${encodeURIComponent(term)}`;
+  const r = await fetch(PROXY ? PROXY+encodeURIComponent(u) : u);
+  if(!r.ok) throw new Error('pump.fun API '+r.status);
+  const j = await r.json();
+  return Array.isArray(j) ? j : (j.coins||[]);
+}
+
+async function hunt(term){
+  term = term.trim().replace(/^\$/,''); if(!term) return;
+  $('q').value = term; $('go').disabled = true;
+  $('out').innerHTML = '<div class="status">🦇 SNIFFING THE BLOODLINE…</div>';
+  try{
+    const coins = await fetchPage(term, 0);
+    state = {term, offset:PAGE, coins, done: coins.length<PAGE};
+    if(!coins.length){ $('out').innerHTML='<div class="status">NO BLOOD FOUND FOR “'+esc(term)+'”</div>'; return; }
+    render(); saveHunt();
+  }catch(e){
+    $('out').innerHTML = `<div class="status err">THE CRYPT IS SEALED: ${esc(e.message)}<br><small style="letter-spacing:1px;color:var(--mute)">Likely CORS — set PROXY (see setup notes in the file).</small></div>`;
+  }finally{ $('go').disabled = false; }
+}
+
+function analyze(){
+  const t = state.term;
+  // original = oldest coin whose name or ticker is closely related to the term
+  const scored = state.coins.map(c=>({c, rel:Math.max(sim(c.name,t),sim(c.symbol,t))}));
+  const rel = scored.filter(x=>x.rel>=60);
+  const pool = rel.length ? rel : scored;
+  const orig = pool.reduce((a,b)=>ts(b.c)<ts(a.c)?b:a).c;
+  const vamps = state.coins.filter(c=>c.mint!==orig.mint && ts(c)>=ts(orig)).map(c=>{
+    const sn = sim(c.name,orig.name), st = sim(c.symbol,orig.symbol);
+    const kind = sn===100 ? 'same' : st===100 ? 'tick' : 'sim';
+    return {c, kind, score:Math.max(sn,st)};
+  }).filter(v=>v.score>=60 || sim(v.c.name,state.term)>=60 || sim(v.c.symbol,state.term)>=60)
+    .sort((a,b)=>ts(a.c)-ts(b.c));
+  return {orig, vamps};
+}
+
+function render(){
+  const {orig, vamps} = analyze();
+  const exact = vamps.filter(v=>v.kind==='same').length;
+  const best = vamps.reduce((m,v)=>Math.max(m,v.c.usd_market_cap||0),0);
+  const lead = (usd_market_cap=>usd_market_cap)(orig.usd_market_cap||0);
+  const winner = best>lead ? 'A VAMP' : 'THE ORIGINAL';
+  $('out').innerHTML = `
+  <h2>THE FIRST-BORN</h2>
+  <a class="orig" href="https://pump.fun/coin/${esc(orig.mint)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+    <img src="${img(orig)}" alt="">
+    <div style="flex:1">
+      <div class="n">${esc(orig.name)}</div><div class="s">$${esc(orig.symbol)}</div>
+      <div class="meta">
+        <span>Born <b>${new Date(ts(orig)).toLocaleString()}</b></span>
+        <span>Age <b>${ago(Date.now()-ts(orig))}</b></span>
+        <span>MC <b>${usd(orig.usd_market_cap)}</b></span>
+        <span>Mint <b>${esc(orig.mint.slice(0,4))}…${esc(orig.mint.slice(-4))}</b></span>
+      </div>
+    </div>
+  </a>
+  <div class="stats">
+    <div class="stat"><b>${vamps.length}</b><span>VAMPS</span></div>
+    <div class="stat"><b>${exact}</b><span>SAME NAME</span></div>
+    <div class="stat"><b style="font-size:19px;padding:5px 0">${winner}</b><span>LEADS BY MCAP</span></div>
+  </div>
+  <h2>THE BLOODSUCKERS · IN ORDER OF BITE</h2>
+  <div class="list">${vamps.map((v,i)=>row(v,i,orig)).join('') || '<div class="status">NO VAMPS YET — THE ORIGINAL RULES THE NIGHT</div>'}</div>
+  ${state.done?'':'<button class="more" id="more">SUMMON MORE ▾</button>'}`;
+  const m = $('more'); if(m) m.onclick = async()=>{
+    m.disabled=true; m.textContent='DIGGING…';
+    try{ const more = await fetchPage(state.term, state.offset); state.offset+=PAGE; state.coins=state.coins.concat(more); state.done=more.length<PAGE; render(); }
+    catch(e){ m.textContent='FAILED — RETRY'; m.disabled=false; }
+  };
+}
+
+function row(v,i,orig){
+  const c=v.c, lab = {same:'SAME NAME',tick:'SAME TICKER',sim:'SIMILAR'}[v.kind], cls={same:'b-same',tick:'b-tick',sim:'b-sim'}[v.kind];
+  return `<a class="v" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener" style="animation-delay:${Math.min(i,20)*30}ms">
+    <div class="i">${i+1}</div><img src="${img(c)}" alt="" loading="lazy">
+    <div><div class="t">${esc(c.name)}<em>$${esc(c.symbol)}</em></div>
+      <div class="d">bit <b style="color:var(--bone)">+${ago(ts(c)-ts(orig))}</b> after the original · MC ${usd(c.usd_market_cap)}</div></div>
+    <div class="right"><span class="badge ${cls}">${lab}</span><span class="score">${v.score}% match</span></div></a>`;
+}
+
+// ===== Supabase "Crypt" =====
+async function saveHunt(){
+  if(!sb) return; const {orig, vamps} = analyze();
+  try{
+    await sb.from('hunts').insert({term:state.term, original_mint:orig.mint, original_name:orig.name, original_symbol:orig.symbol, vamp_count:vamps.length});
+    loadCrypt();
+  }catch(e){ console.warn(e); }
+}
+async function loadCrypt(){
+  if(!sb) return;
+  try{
+    const {data} = await sb.from('hunts').select('term').order('created_at',{ascending:false}).limit(30);
+    const seen=[...new Set((data||[]).map(d=>d.term.toLowerCase()))].slice(0,10);
+    if(seen.length) $('crypt').innerHTML = seen.map(t=>`<button class="chip" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+    document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>hunt(b.dataset.t));
+  }catch(e){}
+}
+
+$('go').onclick = ()=>hunt($('q').value);
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')hunt($('q').value)});
+loadCrypt();
+</script>
+</body>
+</html>
