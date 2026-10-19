@@ -115,6 +115,15 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .mint{cursor:copy}.mint:hover b{color:var(--blood2)}
 @media(max-width:820px){.duo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}#embers{display:none}}
+.orig{text-decoration:none;color:inherit}.orig .bd{flex:1;min-width:0}
+.orig .n,.v .t{overflow-wrap:anywhere}
+.s2{font-size:12px;color:var(--mute);margin-bottom:8px}
+.status small{display:block;margin-top:8px;letter-spacing:1px;color:var(--mute);font-family:Inter;font-size:12px}
+.scan{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:26px 0 0;padding:10px 16px;border:1px solid #3a1420;border-radius:12px;background:#0b0408aa;font-family:Cinzel;letter-spacing:2px;font-size:12px;color:var(--mute)}
+.scan b{color:var(--bone)}.scan .more{display:inline-block;margin:0;padding:6px 14px}
+.pulse{display:inline-block;animation:pl 1.2s ease-in-out infinite}@keyframes pl{50%{transform:scale(1.25);opacity:.6}}
+.hint{margin:10px 2px 0;color:var(--mute);font-size:12px}.hint b{color:var(--bone)}
+.king::before{content:'🔥 BEST COIN MATCH'!important}
 </style>
 </head>
 <body>
@@ -136,164 +145,197 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
     <div id="sug"></div>
   </div>
   <div class="chips"><span>The Crypt (recent hunts):</span><span class="crypt" id="crypt"><span style="opacity:.5">empty…</span></span></div>
+  <div class="hint"><b>$TICKER</b> = every coin with exactly that ticker · <b>name</b> = same name or any name containing the word · <b>CA</b> = that token + its vamps by name &amp; ticker</div>
   <div id="out"></div>
 </main>
 <footer>NOT FINANCIAL ADVICE · THE NIGHT IS DARK AND FULL OF RUGS</footer>
 
 <script>
 // ===== CONFIG =====
-const SUPABASE_URL = 'https://zecjwdslfvqomwwfnesh.supabase.co';   // https://xxxx.supabase.co
-const SUPABASE_KEY = 'sb_publishable_5U3g577H9J--jWQ45fqy2Q_Tltg8Mc8';   // anon key
-const PROXY = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';          // optional: 'https://xxxx.supabase.co/functions/v1/pump-proxy?url='
+const SUPABASE_URL = 'https://zecjwdslfvqomwwfnesh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5U3g577H9J--jWQ45fqy2Q_Tltg8Mc8';
+const PROXY = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';
 const API = 'https://frontend-api-v3.pump.fun/coins';
-const PAGE = 50;
+const PAGE = 50, STEP = 3, CAP0 = 40;   // 40 pages x 50 = 2000 tokens per scan (SCAN DEEPER adds more)
 // ==================
 const $ = id => document.getElementById(id);
 const sb = (SUPABASE_URL && SUPABASE_KEY && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let state = {term:'', offset:0, coins:[], done:false};
-
+const MINT = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const norm = s => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-function lev(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let p=Array.from({length:n+1},(_,i)=>i);
-  for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
-const sim = (a0,b0)=>{const a=norm(a0),b=norm(b0);if(!a||!b)return 0;if(a===b)return 100;
-  const w=s=>String(s).toLowerCase().match(/[a-z0-9]+/g)||[];
-  if(w(a0).includes(b)||w(b0).includes(a))return 90;
-  if(Math.min(a.length,b.length)>=4&&(a.includes(b)||b.includes(a)))return 85;
-  return Math.round(100*(1-lev(a,b)/Math.max(a.length,b.length)))};
+const words = s => String(s||'').toLowerCase().match(/[a-z0-9]+/g) || [];
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function ago(ms){const s=Math.floor(Math.abs(ms)/1000);if(s<60)return s+'s';const m=Math.floor(s/60);if(m<60)return m+'m '+(s%60)+'s';
   const h=Math.floor(m/60);if(h<24)return h+'h '+(m%60)+'m';const d=Math.floor(h/24);return d+'d '+(h%24)+'h'}
 const usd = n => n>=1e6?'$'+(n/1e6).toFixed(2)+'M':n>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Math.round(n||0);
 const ts = c => c.created_timestamp>1e12?c.created_timestamp:c.created_timestamp*1000;
-const img = c => esc(c.image_uri||'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#1a0910"/><text x="5" y="7" font-size="6" text-anchor="middle">🦇</text></svg>'));
-
-const FALL = img({});
+const mc = c => c.usd_market_cap||0;
+const FALL = 'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#1a0910"/><text x="5" y="7" font-size="6" text-anchor="middle">🦇</text></svg>');
 const av = c => { const a=[`https://images.pump.fun/coin-image/${c.mint}?imageWidth=256&imageHeight=256`, c.image_uri].filter(Boolean);
   return `<img src="${esc(a[0])}" data-b="${esc(a[1]||'')}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="imgFail(this)">`};
 function imgFail(el){ if(el.dataset.b){ el.src=el.dataset.b; el.dataset.b=''; } else { el.onerror=null; el.src=FALL; } }
-const MINT=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const merge=(a,b)=>{const m=new Map();[...a,...b].forEach(c=>m.set(c.mint,c));return [...m.values()]};
+function cp(e,m,el){ e.preventDefault(); e.stopPropagation(); if(navigator.clipboard) navigator.clipboard.writeText(m); el.innerHTML='Copied ✓'; }
+
 async function fetchPage(term, offset, sort='created_timestamp', order='ASC', limit=PAGE){
   const qs = `offset=${offset}&limit=${limit}&sort=${sort}&order=${order}&includeNsfw=true&searchTerm=${encodeURIComponent(term)}`;
   const go = u => fetch(PROXY ? PROXY+encodeURIComponent(u) : u);
-  let r = await go(`${API}/search?${qs}`);          // real search endpoint
-  if(!r.ok) r = await go(`${API}?${qs}`);            // fallback: plain list endpoint
+  let r = await go(`${API}/search?${qs}`);
+  if(!r.ok) r = await go(`${API}?${qs}`);
   if(!r.ok) throw new Error('pump.fun API '+r.status);
   const j = await r.json();
   return Array.isArray(j) ? j : (j.coins||j.data||j.results||[]);
 }
+async function getCoin(m){
+  const u = `${API}/${m}`, r = await fetch(PROXY ? PROXY+encodeURIComponent(u) : u);
+  if(!r.ok) throw new Error('CA not found on pump.fun ('+r.status+')');
+  const j = await r.json(); if(!j||!j.mint) throw new Error('CA not found on pump.fun'); return j;
+}
 
-async function hunt(term){
-  const tick = term.trim().startsWith('$'); term = term.trim().replace(/^\$/,''); if(!term) return;
-  $('q').value = term; $('go').disabled = true;
-  $('out').innerHTML = '<div class="status">🦇 SNIFFING THE BLOODLINE…</div>';
+// ===== matching: exact ticker, same name, or any name that contains the word =====
+function matcher(q){ return c=>{
+  const cs = norm(c.symbol);
+  if(q.mode==='ticker') return cs && cs===q.sym ? {k:'tick',s:100} : null;
+  const cn = norm(c.name);
+  if(cn && cn===q.nn) return {k:'same',s:100};
+  if(q.sym && cs===q.sym) return {k:'tick',s:95};
+  const cw = words(c.name);
+  if(q.words.length){
+    if(q.words.every(w=>cw.includes(w))) return {k:'sim',s:85};
+    if(q.words.every(w=>w.length>=3 && cn.includes(w))) return {k:'sim',s:70};
+  }
+  return null;
+}}
+
+let run = 0, state = null;
+const settle = async ps => (await Promise.allSettled(ps)).map(r=>r.status==='fulfilled'?r.value:null);
+// DexScreener only DISCOVERS mints that pump.fun's search misses; data is then re-read from pump.fun
+async function dexMints(term){
   try{
-    let ref=null;
-    if(MINT.test(term)){   // pasted a CA: look up the real token, then search by its real name + ticker
-      const u1 = `https://frontend-api-v3.pump.fun/coins/${term}`;
-      const rr = await fetch(PROXY ? PROXY+encodeURIComponent(u1) : u1);
-      if(!rr.ok) throw new Error('CA not found on pump.fun ('+rr.status+')');
-      ref = await rr.json(); if(!ref||!ref.mint) throw new Error('CA not found on pump.fun');
+    const r = await fetch('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(term)); if(!r.ok) return [];
+    const j = await r.json(), s = new Set();
+    (j.pairs||[]).forEach(p=>{ const b=p.baseToken; if(p.chainId==='solana' && b && /pump$/.test(b.address||'')) s.add(b.address); });
+    return [...s].slice(0,15);
+  }catch(e){ return []; }
+}
+async function hunt(raw){
+  raw = (raw||'').trim(); if(!raw) return;
+  const id = ++run; $('sug').style.display='none'; $('go').disabled = true;
+  $('out').innerHTML = '<div class="status"><span class="pulse">🦇</span><br>SNIFFING THE BLOODLINE…</div>';
+  try{
+    let q, label, terms, ref=null;
+    if(MINT.test(raw)){
+      ref = await getCoin(raw);
+      q = {mode:'name', nn:norm(ref.name), words:words(ref.name), sym:norm(ref.symbol)};
+      label = ref.name; terms = [...new Set([ref.name, ref.symbol])]; $('q').value = ref.name;
+    } else if(raw[0]==='$'){
+      const t = raw.slice(1).trim(); if(!t) throw new Error('Type a ticker after the $');
+      q = {mode:'ticker', sym:norm(t)}; label = '$'+t; terms = [t];
+    } else {
+      q = {mode:'name', nn:norm(raw), words:words(raw), sym:norm(raw)}; label = raw; terms = [raw];
     }
-    const qs = ref ? [...new Set([ref.name, ref.symbol])] : [term];
-    const res = await Promise.all(qs.flatMap(q=>[fetchPage(q,0), fetchPage(q,0,'market_cap','DESC').catch(()=>[])]));
-    const coins = res.reduce((m,x)=>merge(m,x), ref?[ref]:[]);
-    state = {term: ref?ref.name:term, tick, refs: ref?[ref.name,ref.symbol]:[term], ref, offset:PAGE, coins, done: res[0].length<PAGE};
-    if(!coins.length){ $('out').innerHTML='<div class="status">NO BLOOD FOUND FOR “'+esc(term)+'”</div>'; return; }
-    render(); saveHunt();
+    const S = state = {id, q, label, ref, terms, coins:new Map(), scanning:true, f:'all', s:'time', n:10, fails:0};
+    if(ref) S.coins.set(ref.mint, ref);
+    const reqs = [];
+    for(const t of terms){
+      for(let p=0;p<5;p++) reqs.push(fetchPage(t, p*PAGE));
+      reqs.push(fetchPage(t,0,'market_cap','DESC'), fetchPage(t,PAGE,'market_cap','DESC'), fetchPage(t,0,'created_timestamp','DESC'));
+    }
+    const res = await settle(reqs);
+    res.forEach(l=>(l||[]).forEach(c=>c&&c.mint&&S.coins.set(c.mint,c)));
+    S.fails = res.filter(r=>!r).length;
+    if(id!==run) return;
+    if(!S.coins.size && S.fails===res.length) throw new Error('every request to pump.fun failed');
+    render(); deep(id);
   }catch(e){
-    $('out').innerHTML = `<div class="status err">THE CRYPT IS SEALED: ${esc(e.message)}<br><small style="letter-spacing:1px;color:var(--mute)">Likely CORS — set PROXY (see setup notes in the file).</small></div>`;
-  }finally{ $('go').disabled = false; }
+    if(id!==run) return;
+    $('out').innerHTML = `<div class="status err">THE CRYPT IS SEALED<br><small>${esc(e.message)} — if this is CORS or 401, check the pump-proxy function (Verify JWT off).</small></div>`;
+  }finally{ if(id===run) $('go').disabled = false; }
+}
+
+// stage 2: older pages (10 pages max) + DexScreener discovery of tickers the search missed
+async function deep(id){
+  const S = state;
+  try{
+    const more = []; for(const t of S.terms) for(let p=5;p<10;p++) more.push(fetchPage(t, p*PAGE));
+    const dm = await settle(S.terms.map(dexMints));
+    const mints = [...new Set(dm.flat().filter(Boolean))].filter(m=>!S.coins.has(m)).slice(0,15);
+    const [pg, hy] = await Promise.all([settle(more), settle(mints.map(getCoin))]);
+    if(id!==run) return;
+    pg.forEach(l=>(l||[]).forEach(c=>c&&c.mint&&S.coins.set(c.mint,c)));
+    hy.forEach(c=>c&&c.mint&&S.coins.set(c.mint,c));
+  }catch(e){}
+  if(id!==run) return;
+  S.scanning = false; render(); saveHunt();
 }
 
 function analyze(){
-  const t = state.term;
-  // original = oldest coin whose name or ticker is closely related to the term
-  const b0 = state.tick ? state.coins.filter(c=>sim(c.symbol,t)>=80) : state.coins;
-  const base = b0.length ? b0 : state.coins;
-  const refs = state.refs||[t];
-  const relOf = c => Math.max(...refs.map(r=>Math.max(sim(c.name,r),sim(c.symbol,r))));
-  const scored = base.map(c=>({c, rel:relOf(c)}));
-  const rel = scored.filter(x=>x.rel>=70);
-  if(!rel.length) return null;
-  const pool = rel;
-  const orig = pool.reduce((a,b)=>ts(b.c)<ts(a.c)?b:a).c;
-  const king = pool.map(x=>x.c).reduce((a,b)=>(b.usd_market_cap||0)>(a.usd_market_cap||0)?b:a);
-  const vamps = base.filter(c=>c.mint!==orig.mint && ts(c)>=ts(orig)).map(c=>{
-    const sn = sim(c.name,orig.name), st = sim(c.symbol,orig.symbol);
-    const kind = sn===100 ? 'same' : st===100 ? 'tick' : 'sim';
-    return {c, kind, score:Math.max(sn,st)};
-  }).filter(v=>v.score>=70 || relOf(v.c)>=70)
-    .sort((a,b)=>ts(a.c)-ts(b.c));
-  return {orig, vamps, king};
+  const m = matcher(state.q), hits = [];
+  for(const c of state.coins.values()){ const r = m(c); if(r) hits.push({c,k:r.k,s:r.s}); }
+  if(!hits.length) return null;
+  hits.sort((a,b)=>ts(a.c)-ts(b.c));
+  const orig = hits[0], king = hits.reduce((a,b)=>mc(b.c)>mc(a.c)?b:a);
+  return {orig, king, rest:hits.slice(1).filter(h=>h.c.mint!==king.c.mint), total:hits.length};
+}
+
+function scanHTML(){
+  const S=state, n=S.coins.size;
+  return S.scanning ? `<span class="pulse">🦇</span> Hunting… <b>${n}</b> tokens checked`
+    : `Hunt complete · <b>${n}</b> tokens checked${S.fails?' · '+S.fails+' request(s) failed':''}`;
+}
+function upd(){ const el=$('scan'); if(el) el.innerHTML = scanHTML(); }
+
+const LAB = {same:['SAME NAME','b-same'], tick:['SAME TICKER','b-tick'], sim:['SIMILAR','b-sim']};
+function card(c, cls, extra){
+  return `<a class="orig ${cls}" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener">${av(c)}
+    <div class="bd"><div class="n">${esc(c.name)}</div><div class="s">$${esc(c.symbol)}</div>${extra?'<div class="s2">'+extra+'</div>':''}
+    <div class="meta"><span>MC <b>${usd(mc(c))}</b></span><span>Born <b>${new Date(ts(c)).toLocaleDateString()}</b></span><span>Age <b>${ago(Date.now()-ts(c))}</b></span>
+    <span class="mint" title="Copy CA" onclick="cp(event,'${esc(c.mint)}',this)">CA <b>${esc(c.mint.slice(0,4))}…${esc(c.mint.slice(-4))}</b></span></div></div></a>`;
+}
+function row(h,i,O){
+  const c=h.c, [lab,cls]=LAB[h.k];
+  return `<a class="v" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener" style="animation-delay:${Math.min(i,20)*25}ms">
+    <div class="i">${i+1}</div>${av(c)}
+    <div><div class="t">${esc(c.name)}<em>$${esc(c.symbol)}</em></div><div class="d">bit <b style="color:var(--bone)">+${ago(ts(c)-ts(O))}</b> after the first · MC ${usd(mc(c))}</div></div>
+    <div class="right"><span class="badge ${cls}">${lab}</span></div></a>`;
 }
 
 function render(){
-  const an = analyze();
-  if(!an){ $('out').innerHTML='<div class="status">NO REAL MATCH FOR “'+esc(state.term)+'”<br><small style="letter-spacing:1px">pump.fun returned '+state.coins.length+' token(s), none related to it.</small></div>'; return; }
-  const {orig, vamps, king} = an;
-  const exact = vamps.filter(v=>v.kind==='same').length;
-  const best = vamps.reduce((m,v)=>Math.max(m,v.c.usd_market_cap||0),0);
-  const lead = (usd_market_cap=>usd_market_cap)(orig.usd_market_cap||0);
-  const winner = best>lead ? 'A VAMP' : 'THE ORIGINAL';
-  const F = state.f||'all', S = state.s||'time';
-  let list = vamps.filter(v=> F==='all' || v.kind===F || (F==='hi' && (v.c.usd_market_cap||0)>lead));
-  if(S==='mc') list = [...list].sort((a,b)=>(b.c.usd_market_cap||0)-(a.c.usd_market_cap||0));
-  const kingCard = king.mint===orig.mint
-    ? '<div class="kingnote">👑 The original is also the highest market cap — nobody out-pumped it.</div>'
-    : `<a class="orig king" href="https://pump.fun/coin/${esc(king.mint)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin-top:22px">
-        ${av(king)}<div style="flex:1"><div class="n">${esc(king.name)}</div><div class="s">$${esc(king.symbol)}</div>
-        <div class="meta"><span>MC <b>${usd(king.usd_market_cap)}</b></span><span>Bit <b>+${ago(ts(king)-ts(orig))}</b> after the original</span><span>${king.usd_market_cap>lead?'<b>'+(lead?(king.usd_market_cap/lead).toFixed(1)+'x':'∞')+'</b> the original':''}</span></div></div></a>`;
-  const ref = state.ref;
-  const refNote = !ref ? '' : `<div class="kingnote" style="color:var(--bone)">You pasted <b>${esc(ref.name)} $${esc(ref.symbol)}</b> — ${ref.mint===orig.mint?'it <b style="color:var(--gold)">is the original</b>.':'it came <b style="color:var(--blood2)">+'+ago(ts(ref)-ts(orig))+'</b> after the original.'}</div>`;
+  const S=state, an=analyze(), bar=`<div class="scan" id="scan">${scanHTML()}</div>`;
+  if(!an){
+    $('out').innerHTML = bar + `<div class="status">NO MATCH FOR “${esc(S.label)}”<br><small>${S.q.mode==='ticker'?'No token with exactly that ticker':'No token with that whole name'} among ${S.coins.size} checked.</small></div>`;
+    return;
+  }
+  const {orig,king,rest,total}=an, O=orig.c, K=king.c, same=O.mint===K.mint, F=S.f, So=S.s, ref=S.ref;
+  const twins = rest.filter(h=>h.k!=='sim').length + (king.k!=='sim'&&!same?1:0);
+  let list = rest.filter(h=>F==='all'||h.k===F||(F==='hi'&&mc(h.c)>mc(O)));
+  if(So==='mc') list = [...list].sort((a,b)=>mc(b.c)-mc(a.c));
+  const cnt = k => rest.filter(h=>h.k===k).length;
   const fb=(k,l)=>`<button class="chip ${F===k?'on':''}" onclick="state.f='${k}';render()">${l}</button>`;
-  const sb2=(k,l)=>`<button class="chip ${S===k?'on':''}" onclick="state.s='${k}';render()">${l}</button>`;
-  $('out').innerHTML = `
-  <h2>THE FIRST-BORN</h2>
-  <div class="duo"><a class="orig" href="https://pump.fun/coin/${esc(orig.mint)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
-    ${av(orig)}
-    <div style="flex:1">
-      <div class="n">${esc(orig.name)}</div><div class="s">$${esc(orig.symbol)}</div>
-      <div class="meta">
-        <span>Born <b>${new Date(ts(orig)).toLocaleString()}</b></span>
-        <span>Age <b>${ago(Date.now()-ts(orig))}</b></span>
-        <span>MC <b>${usd(orig.usd_market_cap)}</b></span>
-        <span class="mint" title="Copy CA" onclick="event.preventDefault();event.stopPropagation();navigator.clipboard.writeText('${esc(orig.mint)}');this.innerHTML='Copied ✓'">CA <b>${esc(orig.mint.slice(0,4))}…${esc(orig.mint.slice(-4))}</b></span>
-      </div>
-    </div>
-  </a>
-  ${kingCard}</div>
+  const sb2=(k,l)=>`<button class="chip ${So===k?'on':''}" onclick="state.s='${k}';render()">${l}</button>`;
+  const refNote = !ref ? '' : `<div class="kingnote" style="color:var(--bone)">You pasted <b>${esc(ref.name)} $${esc(ref.symbol)}</b> — ${ref.mint===O.mint?'it <b style="color:var(--gold)">is the original</b>.':'it came <b style="color:var(--blood2)">+'+ago(ts(ref)-ts(O))+'</b> after the original.'}</div>`;
+  const kx = same ? '' : `bit +${ago(ts(K)-ts(O))} after the first${mc(O)?' · <b style="color:var(--blood2)">'+(mc(K)/mc(O)).toFixed(1)+'x</b> the first':''}`;
+  $('out').innerHTML = bar + `
+  <h2>THE ORIGINAL${same?' · ALSO THE BEST MATCH':' & THE BEST MATCH'}</h2>
+  <div class="duo">${card(O,'')}${same?'<div class="kingnote">👑 The original is also the BEST COIN MATCH — nobody out-pumped it.</div>':card(K,'king',kx)}</div>
   ${refNote}
   <div class="stats">
-    <div class="stat"><b>${vamps.length}</b><span>VAMPS</span></div>
-    <div class="stat"><b>${exact}</b><span>SAME NAME</span></div>
-    <div class="stat"><b style="font-size:19px;padding:5px 0">${winner}</b><span>LEADS BY MCAP</span></div>
+    <div class="stat"><b>${total}</b><span>TOKENS FOUND</span></div>
+    <div class="stat"><b>${twins}</b><span>EXACT TWINS</span></div>
+    <div class="stat"><b>${usd(mc(K))}</b><span>BEST MATCH MCAP</span></div>
   </div>
-  <h2>THE BLOODSUCKERS</h2>
-  <div class="chips" style="margin:-4px 0 14px">${fb('all','ALL')}${fb('same','SAME NAME')}${fb('tick','SAME TICKER')}${fb('sim','SIMILAR')}${fb('hi','HIGHER MC THAN ORIGINAL')}<span style="flex:1"></span>${sb2('time','BY TIME')}${sb2('mc','BY MARKET CAP')}</div>
-  <div class="list">${list.map((v,i)=>row(v,i,orig)).join('') || '<div class="status">NOTHING HERE — TRY ANOTHER FILTER</div>'}</div>
-  ${state.done?'':'<button class="more" id="more">SUMMON MORE ▾</button>'}`;
-  const m = $('more'); if(m) m.onclick = async()=>{
-    m.disabled=true; m.textContent='DIGGING…';
-    try{ const more = await fetchPage(state.term, state.offset); state.offset+=PAGE; state.coins=merge(state.coins,more); state.done=more.length<PAGE; render(); }
-    catch(e){ m.textContent='FAILED — RETRY'; m.disabled=false; }
-  };
-}
-
-function row(v,i,orig){
-  const c=v.c, lab = {same:'SAME NAME',tick:'SAME TICKER',sim:'SIMILAR'}[v.kind], cls={same:'b-same',tick:'b-tick',sim:'b-sim'}[v.kind];
-  return `<a class="v" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener" style="animation-delay:${Math.min(i,20)*30}ms">
-    <div class="i">${i+1}</div>${av(c)}
-    <div><div class="t">${esc(c.name)}<em>$${esc(c.symbol)}</em></div>
-      <div class="d">bit <b style="color:var(--bone)">+${ago(ts(c)-ts(orig))}</b> after the original · MC ${usd(c.usd_market_cap)}</div></div>
-    <div class="right"><span class="badge ${cls}">${lab}</span><span class="score">${v.score}% match</span></div></a>`;
+  <h2>THE REST OF THE COVEN</h2>
+  <div class="chips" style="margin:-4px 0 14px">
+    ${S.q.mode==='name'?fb('all','ALL ('+rest.length+')')+fb('same','SAME NAME ('+cnt('same')+')')+fb('tick','SAME TICKER ('+cnt('tick')+')')+fb('sim','SIMILAR ('+cnt('sim')+')')+fb('hi','HIGHER MC THAN FIRST'):''}
+    <span style="flex:1"></span>${sb2('time','BY TIME')}${sb2('mc','BY MARKET CAP')}
+  </div>
+  <div class="list">${list.slice(0,S.n).map((h,i)=>row(h,i,O)).join('') || '<div class="status">NOTHING ELSE YET</div>'}</div>
+  ${list.length>S.n?'<button class="more" onclick="state.n+=10;render()">LOAD 10 MORE ▾</button>':''}`;
 }
 
 // ===== Supabase "Crypt" =====
 async function saveHunt(){
-  if(!sb) return; const an = analyze(); if(!an) return; const {orig, vamps} = an;
+  const an = state && analyze(); if(!sb || !an) return;
   try{
-    await sb.from('hunts').insert({term:state.term, original_mint:orig.mint, original_name:orig.name, original_symbol:orig.symbol, vamp_count:vamps.length});
+    await sb.from('hunts').insert({term:state.label, original_mint:an.orig.c.mint, original_name:an.orig.c.name, original_symbol:an.orig.c.symbol, vamp_count:an.total-1});
     loadCrypt();
   }catch(e){ console.warn(e); }
 }
@@ -301,36 +343,32 @@ async function loadCrypt(){
   if(!sb) return;
   try{
     const {data} = await sb.from('hunts').select('term').order('created_at',{ascending:false}).limit(30);
-    const seen=[...new Set((data||[]).map(d=>d.term.toLowerCase()))].slice(0,10);
+    const seen=[...new Set((data||[]).map(d=>d.term))].slice(0,10);
     if(seen.length) $('crypt').innerHTML = seen.map(t=>`<button class="chip" data-t="${esc(t)}">${esc(t)}</button>`).join('');
-    document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>hunt(b.dataset.t));
+    document.querySelectorAll('#crypt .chip').forEach(b=>b.onclick=()=>hunt(b.dataset.t));
   }catch(e){}
 }
 
-$('go').onclick = ()=>hunt($('q').value);
-$('q').addEventListener('keydown',e=>{if(e.key==='Enter')hunt($('q').value)});
-loadCrypt();
-
-// ===== live preview while typing a name or $TICKER =====
-const sug=document.getElementById('sug'); let sT, sN=0;
+// ===== live preview while typing =====
+const sug = $('sug'); let sT, sN=0;
 $('q').addEventListener('input',()=>{
-  clearTimeout(sT); const v=$('q').value.trim(), n=++sN;
-  if(v.replace(/^\$/,'').length<2 || MINT.test(v)){ sug.style.display='none'; return; }
+  clearTimeout(sT); const v=$('q').value.trim(), n=++sN, term=v.replace(/^\$/,'').trim();
+  if(term.length<2 || MINT.test(v)){ sug.style.display='none'; return; }
   sT=setTimeout(async()=>{
     try{
-      const tk=v.startsWith('$'), term=v.replace(/^\$/,'');
-      let list=await fetchPage(term,0,'market_cap','DESC',30); if(n!==sN) return;
-      list=list.filter(c=>tk?sim(c.symbol,term)>=80:Math.max(sim(c.name,term),sim(c.symbol,term))>=60)
-        .sort((a,b)=>(b.usd_market_cap||0)-(a.usd_market_cap||0)).slice(0,6);
-      sug.innerHTML = list.length ? list.map(c=>`<div class="sg" data-m="${esc(c.mint)}">${av(c)}<div><b>${esc(c.name)}</b><em>$${esc(c.symbol)}</em><small>MC ${usd(c.usd_market_cap)} · ${ago(Date.now()-ts(c))} old</small></div></div>`).join('') : '<div class="sg none">No real match yet…</div>';
+      const q = v[0]==='$' ? {mode:'ticker',sym:norm(term)} : {mode:'name',nn:norm(term),words:words(term),sym:norm(term)}, m = matcher(q);
+      let list = await fetchPage(term,0,'market_cap','DESC',50); if(n!==sN) return;
+      list = list.filter(c=>m(c)).sort((a,b)=>mc(b)-mc(a)).slice(0,6);
+      sug.innerHTML = list.length ? list.map(c=>`<div class="sg" data-m="${esc(c.mint)}">${av(c)}<div><b>${esc(c.name)}</b><em>$${esc(c.symbol)}</em><small>MC ${usd(mc(c))} · ${ago(Date.now()-ts(c))} old</small></div></div>`).join('') : '<div class="sg none">No exact match yet…</div>';
       sug.style.display='block';
     }catch(e){ sug.style.display='none'; }
   },350);
 });
-sug.addEventListener('mousedown',e=>{const d=e.target.closest('.sg[data-m]'); if(d){e.preventDefault(); sug.style.display='none'; hunt(d.dataset.m);} });
+sug.addEventListener('mousedown',e=>{ const d=e.target.closest('.sg[data-m]'); if(d){ e.preventDefault(); hunt(d.dataset.m); } });
 document.addEventListener('click',e=>{ if(!e.target.closest('.search')) sug.style.display='none'; });
-$('go').addEventListener('click',()=>sug.style.display='none');
-$('q').addEventListener('keydown',e=>{ if(e.key==='Enter') sug.style.display='none'; });
+$('go').onclick = ()=>hunt($('q').value);
+$('q').addEventListener('keydown',e=>{ if(e.key==='Enter') hunt($('q').value); });
+loadCrypt();
 
 // ===== ambient embers =====
 (()=>{const c=document.getElementById('embers'),x=c.getContext('2d');let w,h;const P=[];
@@ -339,6 +377,7 @@ const mk=r=>({x:Math.random()*w,y:r?Math.random()*h:h+10,r:Math.random()*1.8+.5,
 for(let i=0;i<45;i++)P.push(mk(1));
 (function t(){x.clearRect(0,0,w,h);for(const p of P){p.y-=p.v;p.d+=.015;p.x+=Math.sin(p.d)*.35;if(p.y<-10)Object.assign(p,mk(0));
 x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fillStyle='rgba(255,60,80,'+(.2+p.r/6)+')';x.shadowColor='#ff1a3c';x.shadowBlur=8;x.fill()}requestAnimationFrame(t)})()})();
+
 </script>
 </body>
 </html>
