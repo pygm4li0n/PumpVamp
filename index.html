@@ -19,12 +19,12 @@
    create policy "read"  on hunts for select using (true);
    create policy "write" on hunts for insert with check (true);
 
-2) Fill SUPABASE_URL / SUPABASE_KEY in the <script> below.
+2) Fill SUPABASE_URL / SUPABASE_KEY below (anon key).
 
-3) pump.fun's browser API is CORS-restricted on some networks. When that
-   happens the app silently falls back to DexScreener-only results (DEX
-   supports browser CORS). For full coverage deploy a Supabase Edge
-   Function proxy and set PUMP_PROXY below.
+3) pump.fun's browser API is CORS-restricted. Set PUMP_PROXY to your
+   Supabase Edge Function proxy that fetches ?url=... and returns it with
+   CORS headers. If empty, pump.fun requests run directly and may fail —
+   the app then falls back to DexScreener-only results.
 ===============================================
 -->
 <style>
@@ -127,9 +127,9 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .pulse{display:inline-block;animation:pl 1.2s ease-in-out infinite}@keyframes pl{50%{transform:scale(1.25);opacity:.6}}
 .hint{margin:10px 2px 0;color:var(--mute);font-size:12px}.hint b{color:var(--bone)}
 
-/* NEW — DEX thumbnails (no image available from DexScreener search) */
-.dex-thumb{width:56px;height:56px;border-radius:12px;background:#0a1a2e;border:1px solid #1a3a5a;display:flex;align-items:center;justify-content:center;color:#4a9eff;font-family:Cinzel;font-size:10px;letter-spacing:1px;font-weight:600;flex:none}
-.orig .dex-thumb{width:112px;height:112px;border-radius:16px;border:2px solid var(--gold)}
+/* DEX fallback thumbnails (when no real image is available) */
+.dex-thumb{width:56px;height:56px;border-radius:12px;background:#0a1a2e;border:1px solid #1a3a5a;display:flex;align-items:center;justify-content:center;color:#4a9eff;font-family:Cinzel;font-size:10px;letter-spacing:1px;font-weight:600;flex:none;text-align:center}
+.orig .dex-thumb{width:112px;height:112px;border-radius:16px;border:2px solid var(--gold);font-size:12px}
 .duo .orig .dex-thumb{width:92px;height:92px}
 @media(max-width:640px){.orig .dex-thumb{width:80px;height:80px}}
 .sg-dex-thumb{width:38px;height:38px;border-radius:9px;background:#0a1a2e;border:1px solid #1a3a5a;display:flex;align-items:center;justify-content:center;color:#4a9eff;font-size:10px;font-family:Cinzel;font-weight:600;letter-spacing:1px;flex:none}
@@ -141,7 +141,6 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 <span class="bat" style="top:12%">🦇</span><span class="bat" style="top:30%;animation-delay:-7s;font-size:16px">🦇</span><span class="bat" style="top:55%;animation-delay:-12s">🦇</span>
 
 <header>
-  <!-- Replace with your data-URI logo if you want the original artwork back -->
   <div class="logo" aria-hidden="true">🦇</div>
   <h1>VAMP PUMP</h1>
   <div class="sub">Find the Original</div>
@@ -187,10 +186,12 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 /* ==================== CONFIG ==================== */
 const SUPABASE_URL = 'https://zecjwdslfvqomwwfnesh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5U3g577H9J--jWQ45fqy2Q_Tltg8Mc8';
-const PROXY = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';
-const MIN_LIQUIDITY_USD = 1000;
+const PUMP_PROXY   = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';
+const MIN_LIQUIDITY_USD  = 1000;
 const SUGGEST_DEBOUNCE_MS = 250;
-const SUGGEST_LIMIT = 8;
+const SUGGEST_LIMIT       = 8;
+const MATCH_THRESHOLD     = 0.55;
+const SYMBOL_BOOST        = 1.3;
 const PUMP_BASE = 'https://frontend-api-v3.pump.fun';
 const DEX_BASE  = 'https://api.dexscreener.com';
 
@@ -239,7 +240,14 @@ function escapeHTML(s) {
     { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
   ));
 }
-const shortMint  = m => !m ? '' : m.slice(0, 4) + '…' + m.slice(-4);
+
+function escapeAttr(s) {
+  return String(s ?? '').replace(/[<>"']/g, c => (
+    { '<':'\\u003c', '>':'\\u003e', '"':'\\u0022', "'":'\\u0027' }[c]
+  ));
+}
+
+const shortMint = m => !m ? '' : m.slice(0, 4) + '…' + m.slice(-4);
 function formatUsd(n) {
   if (!n || n < 0) return '$0';
   if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
@@ -256,7 +264,6 @@ async function fetchJSON(url, signal) {
 }
 
 function pumpUrl(pathAndQuery) {
-  // If a proxy is configured, route through it to bypass browser CORS
   if (PUMP_PROXY) return PUMP_PROXY + encodeURIComponent(`${PUMP_BASE}${pathAndQuery}`);
   return `${PUMP_BASE}${pathAndQuery}`;
 }
@@ -336,6 +343,7 @@ function pairsToEntries(pairs) {
     mint: p.baseToken.address,
     name: p.baseToken.name,
     symbol: p.baseToken.symbol,
+    image: p.info?.imageUrl ?? null,          /* ← real DEX logo */
     pairAddress: p.pairAddress,
     url: p.url,
     priceUsd: p.priceUsd,
@@ -349,44 +357,39 @@ function pairsToEntries(pairs) {
   }));
 }
 
-/**
- * Merge results from both sources, dedupe by mint, apply liquidity filter to
- * DEX-only entries, and rank so the highest market cap becomes the "original".
- */
 function mergeResults(pumpCoins, dexPairs, term) {
   const seen = new Set();
   const all  = [];
 
-  // pump.fun first (higher priority for natives)
+  // pump.fun first
   for (const e of pumpToEntries(pumpCoins)) {
     if (seen.has(e.mint)) continue;
     seen.add(e.mint);
     all.push(e);
   }
 
-  // DexScreener — dedupe against pump.fun, then filter dust liquidity
+  // DexScreener — dedupe + liquidity filter on DEX-only entries
   for (const e of pairsToEntries(bestPairByToken(dexPairs))) {
     if (seen.has(e.mint)) continue;
-    // pump.fun-origin tokens that somehow bypassed the pump.fun API stay valid
     const isPumpOrigin = e.dexId === 'pumpfun';
     if (!isPumpOrigin && e.liquidityUsd < MIN_LIQUIDITY_USD) continue;
     seen.add(e.mint);
     all.push(e);
   }
 
-  // Score against the term
+  // Score against term — symbol gets priority
   for (const e of all) {
     const nSim = similarity(e.name, term);
     const sSim = similarity(e.symbol, term);
     e._nSim = nSim;
     e._sSim = sSim;
-    e._score = Math.max(nSim, sSim);
+    e._score = Math.max(nSim, sSim * SYMBOL_BOOST);
     e._exactName = norm(e.name) === norm(term);
     e._exactSym  = norm(e.symbol) === norm(term);
   }
 
   const relevant = all.filter(e =>
-    e._score >= 0.45 || e._exactName || e._exactSym
+    e._score >= MATCH_THRESHOLD || e._exactName || e._exactSym
   );
 
   if (!relevant.length) return { original: null, vamps: [], all: [] };
@@ -398,12 +401,18 @@ function mergeResults(pumpCoins, dexPairs, term) {
 }
 
 /* ==================== RENDERING ==================== */
-function imageFor(entry, context = 'v') {
-  if (entry._source === 'pumpfun' && entry.image) {
-    return `<img src="${escapeHTML(entry.image)}" alt="" loading="lazy">`;
-  }
+function fallbackThumb(entry) {
   const label = entry.dexId ? entry.dexId.slice(0, 3).toUpperCase() : 'DEX';
   return `<div class="dex-thumb" title="Source: ${escapeHTML(entry.dexId || 'DEX')}">${label}</div>`;
+}
+
+function imageFor(entry) {
+  if (entry.image) {
+    return `<img src="${escapeHTML(entry.image)}" alt=""
+                 loading="lazy"
+                 onerror="this.outerHTML='${escapeAttr(fallbackThumb(entry))}'">`;
+  }
+  return fallbackThumb(entry);
 }
 
 function badgeText(entry) {
@@ -424,10 +433,11 @@ function renderOriginal(entry) {
   const cls   = 'orig' + (isDex ? ' king' : '');
   return `
     <a class="${cls}" href="${escapeHTML(entry.url)}" target="_blank" rel="noopener">
-      ${imageFor(entry, 'orig')}
+      ${imageFor(entry)}
       <div class="bd">
         <div class="n">${escapeHTML(entry.name)}</div>
         <div class="s">$${escapeHTML(entry.symbol)}</div>
+        ${isDex ? `<span class="badge b-dex" style="font-size:9px;margin-bottom:4px">DEX</span>` : ''}
         <div class="s2">
           ${isDex ? `DEX match · ${escapeHTML(entry.dexId || 'DEX')}` : 'pump.fun native'}
         </div>
@@ -506,7 +516,7 @@ async function fetchSuggestions(term) {
         mint: addr,
         name: p.baseToken.name,
         symbol: p.baseToken.symbol,
-        image: null,
+        image: p.info?.imageUrl ?? null,       /* ← real DEX logo */
         _source: 'dexscreener',
       });
     }
@@ -524,8 +534,9 @@ function renderSuggestions(items, query) {
   }
   sug.innerHTML = items.map(item => `
     <div class="sg" data-mint="${escapeHTML(item.mint)}" role="option">
-      ${item._source === 'pumpfun' && item.image
-        ? `<img src="${escapeHTML(item.image)}" alt="" loading="lazy">`
+      ${item.image
+        ? `<img src="${escapeHTML(item.image)}" alt="" loading="lazy"
+               onerror="this.outerHTML='<div class=&quot;sg-dex-thumb&quot;>DEX</div>'">`
         : `<div class="sg-dex-thumb">DEX</div>`}
       <div>
         <b>${escapeHTML(item.name)}</b><em>$${escapeHTML(item.symbol)}</em>
@@ -572,7 +583,7 @@ async function hunt(term) {
         ? pairsToEntries(bestPairByToken(resolved.pairs))[0]
         : pumpToEntries([resolved.coin])[0];
 
-      // Now find lookalikes by the resolved token's name
+      // Find lookalikes by the resolved token's name
       const [lookPump, lookDex] = await Promise.allSettled([
         searchPumpFun(entry.name || entry.symbol),
         searchDexScreener(entry.name || entry.symbol),
@@ -584,7 +595,6 @@ async function hunt(term) {
         entry.name || entry.symbol
       );
 
-      // Force the user's resolved token as THE original
       merged = {
         original: entry,
         vamps: lookMerged.all.filter(e => e.mint !== entry.mint),
