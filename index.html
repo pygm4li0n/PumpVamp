@@ -17,16 +17,30 @@ The three dots top right show which of pump.fun / DexScreener / Supabase is work
 <style>
 :root{--bg:#07030a;--panel:#0e0509;--line:#3a0f1c;--line2:#6a1428;--red:#ff2745;--red2:#c1001f;--text:#f6ebe8;--mute:#a98f94;--gold:#e8b54f}
 *{box-sizing:border-box;margin:0}
+/* Cursor: default everywhere, text only on inputs, pointer on interactive */
+body, body * {cursor:default}
+input, textarea, select, [contenteditable="true"] {cursor:text}
+button, a, [onclick], [role="button"], .chip, .btn, .go, .mode, .more, .fc, .lb, .sg[data-m], .mint {cursor:pointer}
 html,body{height:100%;background:var(--bg)}
 body{font:500 14px/1.45 Inter,system-ui,sans-serif;color:var(--text);overflow-x:hidden;position:relative;
 background:radial-gradient(ellipse 90% 55% at 50% -10%,#4a0816 0,#14050b 48%,#07030a 85%) fixed}
 
 /* ===== Moon & fog ===== */
 .moon{position:fixed;top:-140px;right:4%;width:360px;height:360px;border-radius:50%;
-  background:radial-gradient(circle at 38% 32%,#fff0f0 0%,#ffc0c8 8%,#ff2745 30%,#8a0016 58%,transparent 72%);
-  box-shadow:0 0 120px 40px rgba(255,39,69,.28),0 0 240px 100px rgba(193,0,31,.15);
-  filter:blur(1px);opacity:.55;pointer-events:none;z-index:0;animation:moonPulse 10s ease-in-out infinite}
-@keyframes moonPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.72;transform:scale(1.06)}}
+  background:radial-gradient(circle at 38% 32%,
+    #ffffff 0%,
+    #f8f8fc 18%,
+    #e8e8f2 38%,
+    #c8c8d8 58%,
+    #9898b0 76%,
+    transparent 92%);
+  box-shadow:
+    0 0 60px 20px rgba(255,255,255,.55),
+    0 0 140px 55px rgba(235,235,250,.38),
+    0 0 300px 130px rgba(210,210,230,.20);
+  filter:blur(.5px);opacity:.9;pointer-events:none;z-index:0;
+  animation:moonPulse 10s ease-in-out infinite}
+@keyframes moonPulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
 .fog-layer{position:fixed;left:-15%;right:-15%;bottom:-20%;height:60vh;pointer-events:none;z-index:0;
   background:
     radial-gradient(ellipse 40% 60% at 20% 70%,rgba(193,0,31,.18),transparent 65%),
@@ -36,12 +50,15 @@ background:radial-gradient(ellipse 90% 55% at 50% -10%,#4a0816 0,#14050b 48%,#07
 @keyframes fogDrift{0%{transform:translateX(-4%)}100%{transform:translateX(4%)}}
 
 /* ===== Ambient bats ===== */
-.ambient-bats{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-.ambat{position:absolute;font-size:22px;filter:drop-shadow(0 0 8px rgba(255,39,69,.7));opacity:0;animation:batFly 24s linear infinite}
-.ambat.b1{top:12%;animation-duration:22s;animation-delay:-5s;font-size:18px}
-.ambat.b2{top:28%;animation-duration:30s;animation-delay:-18s;font-size:26px}
-.ambat.b3{top:55%;animation-duration:26s;animation-delay:-10s;font-size:16px}
-.ambat.b4{top:72%;animation-duration:34s;animation-delay:-22s;font-size:20px}
+.ambient-bats{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.ambat{position:absolute;font-size:28px;
+  filter:invert(1) brightness(1.4) drop-shadow(0 0 14px rgba(255,60,80,1)) drop-shadow(0 0 28px rgba(193,0,31,.7));opacity:0;animation:batFly 24s linear infinite;pointer-events:none;will-change:transform,opacity}
+.ambat.b1{top:8%;animation-duration:22s;animation-delay:-5s;font-size:24px}
+.ambat.b2{top:20%;animation-duration:30s;animation-delay:-18s;font-size:32px}
+.ambat.b3{top:42%;animation-duration:26s;animation-delay:-10s;font-size:22px}
+.ambat.b4{top:58%;animation-duration:34s;animation-delay:-22s;font-size:28px}
+.ambat.b5{top:74%;animation-duration:28s;animation-delay:-14s;font-size:20px}
+.ambat.b6{top:88%;animation-duration:36s;animation-delay:-30s;font-size:26px}
 @keyframes batFly{
   0%{left:-80px;opacity:0;transform:translateY(0) rotate(-4deg)}
   8%{opacity:.5}
@@ -250,15 +267,15 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#6a1428,
   background:radial-gradient(circle at 50% 50%,rgba(255,39,69,.45),rgba(193,0,31,.15) 40%,transparent 70%);
   animation:huntFlash .9s ease-out forwards}
 @keyframes huntFlash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
-.hunt-bat{position:fixed;font-size:26px;pointer-events:none;z-index:9001;
-  filter:drop-shadow(0 0 10px #ff2745);
-  animation:huntBat 1.4s cubic-bezier(.2,.7,.3,1) forwards;
+.hunt-bat{position:fixed;font-size:34px;pointer-events:none;z-index:9001;
+  filter:invert(1) brightness(1.4) drop-shadow(0 0 16px #ff2745) drop-shadow(0 0 32px #c1001f);
+  animation:huntBat 1.6s cubic-bezier(.2,.7,.3,1) forwards;
   will-change:transform,opacity}
 @keyframes huntBat{
-  0%{transform:translate(-50%,-50%) scale(.4) rotate(0);opacity:0}
-  20%{opacity:1}
-  60%{opacity:1}
-  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.5) rotate(var(--rot,20deg));opacity:0}
+  0%{transform:translate(-50%,-50%) scale(.5) rotate(0);opacity:0}
+  15%{opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.8) rotate(var(--rot,20deg));opacity:0}
 }
 
 /* ===== Responsive ===== */
@@ -269,8 +286,8 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#6a1428,
   #center{order:-1}.row2,.modes{grid-template-columns:1fr}.bm{flex-direction:column;text-align:center}.list{grid-template-columns:1fr}.v{grid-template-columns:22px 36px minmax(0,1fr)}.mcx{grid-column:2/4;justify-items:start}
 }
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .ambient-bats,.hunt-flash,.hunt-bat{display:none!important}
+  /* Atmospheric animations stay — they're the whole vibe. Only kill the noisy pulsing. */
+  .v, .pulse, .live, .go::after {animation:none!important}
 }
 </style>
 </head>
@@ -282,6 +299,8 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#6a1428,
   <span class="ambat b2">🦇</span>
   <span class="ambat b3">🦇</span>
   <span class="ambat b4">🦇</span>
+  <span class="ambat b5">🦇</span>
+  <span class="ambat b6">🦇</span>
 </div>
 <div class="win">
   <header class="bar">
@@ -459,7 +478,7 @@ function triggerHuntAnimation(){
   const r = btn.getBoundingClientRect();
   const cx = r.left + r.width/2;
   const cy = r.top + r.height/2;
-  const n = 9;
+  const n = 11;
   for (let i = 0; i < n; i++){
     const b = document.createElement('span');
     b.className = 'hunt-bat';
@@ -472,7 +491,7 @@ function triggerHuntAnimation(){
     b.style.setProperty('--dy', (Math.sin(angle)*dist).toFixed(0) + 'px');
     b.style.setProperty('--rot', ((Math.random()*60 - 30).toFixed(0)) + 'deg');
     b.style.animationDelay = (Math.random()*0.15) + 's';
-    b.style.fontSize = (20 + Math.random()*14) + 'px';
+    b.style.fontSize = (20 + Math.random()*17) + 'px';
     document.body.appendChild(b);
     setTimeout(()=>b.remove(), 1800);
   }
