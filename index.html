@@ -59,7 +59,7 @@ box-shadow:0 0 50px #b0001e33}
 button{cursor:pointer;border:0;font-family:Cinzel,serif;font-weight:600;letter-spacing:2px}
 .bite{background:linear-gradient(180deg,var(--blood2),var(--blood));color:#fff;padding:0 28px;border-radius:11px;font-size:15px;
 box-shadow:0 0 24px #ff1a3c66;transition:.2s}
-.bite:hover{transform:translateY(-1px);box-shadow:0 0 38px #ff1a3caa}.bite:disabled{opacity:.5}
+.bite:hover{transform:translateY(-1px);box-shadow:0 0 38px #ff1a3caa}.bite:disabled{opacity:.5;cursor:wait}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 2px 0;align-items:center;color:var(--mute);font-size:13px}
 .chip{background:#1a0910;border:1px solid #3a1420;color:var(--bone);padding:5px 12px;border-radius:99px;font-size:12px;letter-spacing:1px}
 .chip:hover{border-color:var(--blood2)}
@@ -68,10 +68,10 @@ box-shadow:0 0 24px #ff1a3c66;transition:.2s}
 h2{font-family:Cinzel,serif;letter-spacing:5px;font-size:14px;color:var(--gold);margin:42px 0 14px;display:flex;align-items:center;gap:14px}
 h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#5a1020,transparent)}
 .orig{display:flex;gap:22px;align-items:center;background:linear-gradient(135deg,#1c0710,#0c0409);border:1px solid var(--gold);
-border-radius:20px;padding:24px;position:relative;box-shadow:0 0 60px #c9a24a22,inset 0 0 40px #b0001e22}
+border-radius:20px;padding:24px;position:relative;box-shadow:0 0 60px #c9a24a22,inset 0 0 40px #b0001e22;text-decoration:none;color:inherit}
 .orig::before{content:"👑 THE ORIGINAL";position:absolute;top:-12px;left:22px;background:var(--ink);padding:0 12px;color:var(--gold);font-family:Cinzel;font-size:12px;letter-spacing:3px}
-.orig img{width:112px;height:112px;border-radius:16px;object-fit:cover;border:2px solid var(--gold);background:#000;flex:none}
-.orig .n{font-family:'Cinzel Decorative',serif;font-size:28px;font-weight:700}
+.orig .bd{flex:1;min-width:0}
+.orig .n{font-family:'Cinzel Decorative',serif;font-size:28px;font-weight:700;overflow-wrap:anywhere}
 .orig .s{color:var(--blood2);font-weight:600;margin:2px 0 8px}
 .meta{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute);font-size:13px}.meta b{color:var(--bone)}
 .list{display:grid;gap:10px}
@@ -80,23 +80,21 @@ padding:12px 16px;text-decoration:none;color:inherit;transition:.2s;animation:ri
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 .v:hover{border-color:var(--blood2);box-shadow:0 0 28px #b0001e55;transform:translateX(4px)}
 .v .i{font-family:Cinzel;color:#5d3a42;font-size:15px;text-align:center}
-.v img{width:56px;height:56px;border-radius:12px;object-fit:cover;background:#000;flex:none}
-.v .t{font-weight:600}.v .t em{font-style:normal;color:var(--blood2);margin-left:8px;font-size:13px}
+.v .t{font-weight:600;overflow-wrap:anywhere}.v .t em{font-style:normal;color:var(--blood2);margin-left:8px;font-size:13px}
 .v .d{font-size:12px;color:var(--mute);margin-top:3px}
 .badge{font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:99px;font-family:Cinzel;font-weight:600;white-space:nowrap}
 .b-same{background:#b0001e;color:#fff}
 .b-tick{background:#7a1a55;color:#fff}
 .b-sim{background:#2b1a05;color:var(--gold);border:1px solid #5c4210}
 .b-dex{background:#0a1a2e;color:#4a9eff;border:1px solid #1a3a5a}
+.b-pump{background:#1a0a2e;color:#b06cff;border:1px solid #3a1a5a}
 .right{text-align:right;display:grid;gap:6px;justify-items:end}.score{font-size:11px;color:var(--mute)}
 footer{text-align:center;color:#5d4a4e;font-size:12px;padding:30px;position:relative;z-index:2;letter-spacing:2px;font-family:Cinzel}
 @media(max-width:640px){.orig{flex-direction:column;text-align:center}.meta{justify-content:center}.v{grid-template-columns:30px 48px 1fr}.v .right{grid-column:2/4;justify-items:start;text-align:left}.search{flex-direction:column}.bite{padding:14px}}
 .chip.on{border-color:var(--blood2);background:#3a0a16}
 
-/* "best DEX match" variant of the original card */
 .king{border-color:var(--blood2)!important;box-shadow:0 0 60px #ff1a3c33,inset 0 0 40px #b0001e33!important}
 .king::before{content:'🔥 BEST COIN MATCH'!important;color:var(--blood2)!important}
-.king img{border-color:var(--blood2)!important}
 .kingnote{margin-top:18px;text-align:center;color:var(--gold);font-family:Cinzel;letter-spacing:2px;font-size:13px}
 
 header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height:640px;max-width:120vw;transform:translateX(-50%);background:radial-gradient(circle,#b0001e70,#b0001e22 45%,transparent 68%);animation:glow 6s ease-in-out infinite;z-index:-1;pointer-events:none}
@@ -109,16 +107,14 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .search{box-shadow:0 0 60px #b0001e40,inset 0 0 0 1px #ffffff08}.search:focus-within{border-color:var(--blood2)}
 #sug{display:none;position:absolute;left:0;right:0;top:calc(100% + 8px);background:#0c0409f5;border:1px solid #5a1020;border-radius:14px;overflow:hidden;z-index:20;box-shadow:0 24px 60px #000}
 .sg{display:flex;gap:12px;align-items:center;padding:10px 14px;cursor:pointer;transition:background .15s}
-.sg:hover{background:#2a0a14}.sg img{width:38px;height:38px;border-radius:9px;object-fit:cover;background:#000;flex:none}
-.sg b{font-weight:600}.sg em{font-style:normal;color:var(--blood2);margin-left:6px;font-size:13px}
+.sg:hover{background:#2a0a14}.sg b{font-weight:600}.sg em{font-style:normal;color:var(--blood2);margin-left:6px;font-size:13px}
 .sg small{display:block;color:var(--mute);font-size:12px;margin-top:1px}
 .sg.none{color:var(--mute);cursor:default}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:18px}.duo:has(.kingnote){grid-template-columns:1fr}
-.duo .king{margin-top:0!important}.duo .orig{padding:20px;gap:18px}.duo .orig img{width:92px;height:92px;flex:none}.duo .orig .n{font-size:21px;word-break:break-word}
+.duo .king{margin-top:0!important}.duo .orig{padding:20px;gap:18px}.duo .orig .n{font-size:21px;word-break:break-word}
 .mint{cursor:copy}.mint:hover b{color:var(--blood2)}
 @media(max-width:820px){.duo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}#embers{display:none}}
-.orig{text-decoration:none;color:inherit}.orig .bd{flex:1;min-width:0}
 .orig .n,.v .t{overflow-wrap:anywhere}
 .s2{font-size:12px;color:var(--mute);margin-bottom:8px}
 .status small{display:block;margin-top:8px;letter-spacing:1px;color:var(--mute);font-family:Inter;font-size:12px}
@@ -127,12 +123,11 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .pulse{display:inline-block;animation:pl 1.2s ease-in-out infinite}@keyframes pl{50%{transform:scale(1.25);opacity:.6}}
 .hint{margin:10px 2px 0;color:var(--mute);font-size:12px}.hint b{color:var(--bone)}
 
-/* DEX fallback thumbnails (when no real image is available) */
-.dex-thumb{width:56px;height:56px;border-radius:12px;background:#0a1a2e;border:1px solid #1a3a5a;display:flex;align-items:center;justify-content:center;color:#4a9eff;font-family:Cinzel;font-size:10px;letter-spacing:1px;font-weight:600;flex:none;text-align:center}
-.orig .dex-thumb{width:112px;height:112px;border-radius:16px;border:2px solid var(--gold);font-size:12px}
-.duo .orig .dex-thumb{width:92px;height:92px}
-@media(max-width:640px){.orig .dex-thumb{width:80px;height:80px}}
-.sg-dex-thumb{width:38px;height:38px;border-radius:9px;background:#0a1a2e;border:1px solid #1a3a5a;display:flex;align-items:center;justify-content:center;color:#4a9eff;font-size:10px;font-family:Cinzel;font-weight:600;letter-spacing:1px;flex:none}
+/* Gradient letter avatar — sits behind the img, never blank */
+.thumb{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;
+  font-family:'Cinzel Decorative',serif;font-weight:700;text-align:center;line-height:1;letter-spacing:0}
+.thumb>span{position:relative;z-index:0}
+.thumb>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 </style>
 </head>
 <body>
@@ -166,7 +161,7 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
     <button class="chip" data-q="cat">cat</button>
   </div>
 
-  <p class="hint">Filters DEX-only tokens below <b>$1,000</b> liquidity. pump.fun natives are always kept.</p>
+  <p class="hint">Filters DEX-only tokens below <b>$10K</b> liquidity or with <b>no 24h volume</b>. pump.fun natives are always kept.</p>
 
   <div class="status" id="status"></div>
   <div id="result"></div>
@@ -187,11 +182,14 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 const SUPABASE_URL = 'https://zecjwdslfvqomwwfnesh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5U3g577H9J--jWQ45fqy2Q_Tltg8Mc8';
 const PUMP_PROXY   = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';
-const MIN_LIQUIDITY_USD  = 1000;
+const MIN_DEX_LIQUIDITY = 10000;   // $10k — no fishy dust pools
+const MIN_DEX_VOLUME    = 5000;    // $5k 24h volume required
+const MIN_DEX_AGE_MS    = 5 * 60 * 1000; // 5 min — skip fresh rug pairs
 const SUGGEST_DEBOUNCE_MS = 250;
 const SUGGEST_LIMIT       = 8;
 const MATCH_THRESHOLD     = 0.55;
 const SYMBOL_BOOST        = 1.3;
+const PUMP_BOOST          = 1e12;  // pump.fun always beats DEX for "original"
 const PUMP_BASE = 'https://frontend-api-v3.pump.fun';
 const DEX_BASE  = 'https://api.dexscreener.com';
 
@@ -241,12 +239,6 @@ function escapeHTML(s) {
   ));
 }
 
-function escapeAttr(s) {
-  return String(s ?? '').replace(/[<>"']/g, c => (
-    { '<':'\\u003c', '>':'\\u003e', '"':'\\u0022', "'":'\\u0027' }[c]
-  ));
-}
-
 const shortMint = m => !m ? '' : m.slice(0, 4) + '…' + m.slice(-4);
 function formatUsd(n) {
   if (!n || n < 0) return '$0';
@@ -254,6 +246,9 @@ function formatUsd(n) {
   if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
   if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
   return '$' + Math.round(n);
+}
+function validImage(url) {
+  return typeof url === 'string' && /^https?:\/\//i.test(url) && url.length < 2048;
 }
 
 /* ==================== FETCH LAYER ==================== */
@@ -274,7 +269,10 @@ async function searchPumpFun(term, signal) {
       pumpUrl(`/coins/search?searchTerm=${encodeURIComponent(term)}&limit=50&offset=0&sort=market_cap&order=DESC`),
       signal
     );
-    return Array.isArray(r) ? r : [];
+    if (Array.isArray(r)) return r;
+    if (Array.isArray(r?.coins)) return r.coins;
+    if (Array.isArray(r?.data))  return r.data;
+    return [];
   } catch (e) {
     console.warn('[pump.fun] search failed, continuing with DEX only:', e.message);
     return [];
@@ -295,11 +293,10 @@ async function searchDexScreener(term, signal) {
 }
 
 async function resolveByAddress(address, signal) {
-  // 1) DexScreener first — covers any Solana token, including Raydium/Orca
+  // 1) DexScreener token-pairs endpoint — covers all Solana tokens
   try {
-    const r = await fetchJSON(`${DEX_BASE}/tokens/v1/solana/${address}`, signal);
-    const raw = Array.isArray(r) ? r : (r?.pairs ?? []);
-    const pairs = raw.filter(p => p.chainId === 'solana');
+    const r = await fetchJSON(`${DEX_BASE}/latest/dex/tokens/${address}`, signal);
+    const pairs = (r?.pairs ?? []).filter(p => p.chainId === 'solana');
     if (pairs.length) return { source: 'dexscreener', pairs };
   } catch (e) { /* fall through */ }
 
@@ -308,6 +305,13 @@ async function resolveByAddress(address, signal) {
     const coin = await fetchJSON(pumpUrl(`/coins/${address}`), signal);
     if (coin?.mint) return { source: 'pumpfun', coin };
   } catch (e) { /* fall through */ }
+
+  // 3) DexScreener search fallback
+  try {
+    const pairs = await searchDexScreener(address, signal);
+    const hit = bestPairByToken(pairs).find(p => p.baseToken?.address === address);
+    if (hit) return { source: 'dexscreener', pairs: [hit] };
+  } catch (e) { /* ignore */ }
 
   return null;
 }
@@ -326,28 +330,33 @@ function bestPairByToken(pairs) {
 }
 
 function pumpToEntries(coins) {
-  return coins.map(c => ({
-    mint: c.mint,
-    name: c.name,
-    symbol: c.symbol,
-    image: c.image,
-    marketCap: c.usd_market_cap ?? c.market_cap ?? 0,
-    createdAt: c.created_timestamp ?? c.created_at ?? 0,
-    url: `https://pump.fun/coin/${c.mint}`,
-    _source: 'pumpfun',
-  }));
+  return coins
+    .filter(c => c && c.mint)
+    .map(c => ({
+      mint: c.mint,
+      name: c.name || 'Unknown',
+      symbol: c.symbol || '?',
+      image: validImage(c.image) ? c.image : null,
+      marketCap: c.usd_market_cap ?? c.market_cap ?? 0,
+      createdAt: c.created_timestamp ?? c.created_at ?? 0,
+      complete: !!c.complete,
+      raydium_pool: c.raydium_pool || null,
+      url: `https://pump.fun/coin/${c.mint}`,
+      _source: 'pumpfun',
+    }));
 }
 
 function pairsToEntries(pairs) {
   return pairs.map(p => ({
-    mint: p.baseToken.address,
-    name: p.baseToken.name,
-    symbol: p.baseToken.symbol,
-    image: p.info?.imageUrl ?? null,          /* ← real DEX logo */
+    mint: p.baseToken?.address,
+    name: p.baseToken?.name || 'Unknown',
+    symbol: p.baseToken?.symbol || '?',
+    image: validImage(p.info?.imageUrl) ? p.info.imageUrl : null,
     pairAddress: p.pairAddress,
-    url: p.url,
+    url: p.url || `https://dexscreener.com/solana/${p.pairAddress}`,
     priceUsd: p.priceUsd,
     liquidityUsd: p.liquidity?.usd ?? 0,
+    volume24h: p.volume?.h24 ?? 0,
     marketCap: p.marketCap ?? p.fdv ?? 0,
     fdv: p.fdv ?? 0,
     dexId: p.dexId,
@@ -355,6 +364,29 @@ function pairsToEntries(pairs) {
     _source: 'dexscreener',
     _pair: p,
   }));
+}
+
+/** A DEX-only entry is "fishy" if it's too new, too illiquid, or has no volume. */
+function isFishyDex(e) {
+  if (e._source !== 'dexscreener') return false;
+  if (e.dexId === 'pumpfun') return false; // pump.fun pairs on DEX are legit
+  const liq = e.liquidityUsd ?? 0;
+  const vol = e.volume24h ?? 0;
+  if (liq < MIN_DEX_LIQUIDITY) return true;
+  if (vol < MIN_DEX_VOLUME && liq < MIN_DEX_LIQUIDITY * 5) return true;
+  if (e.createdAt && Date.now() - e.createdAt < MIN_DEX_AGE_MS) return true;
+  return false;
+}
+
+function trustScore(e) {
+  let score = e.marketCap ?? 0;
+  if (e._source === 'pumpfun') {
+    score += PUMP_BOOST;
+    if (e.raydium_pool) score += 1e10;     // graduated = more legit
+    if (e.complete)      score += 5e9;
+  }
+  score += (e.liquidityUsd ?? 0) * 3;
+  return score;
 }
 
 function mergeResults(pumpCoins, dexPairs, term) {
@@ -368,13 +400,25 @@ function mergeResults(pumpCoins, dexPairs, term) {
     all.push(e);
   }
 
-  // DexScreener — dedupe + liquidity filter on DEX-only entries
-  for (const e of pairsToEntries(bestPairByToken(dexPairs))) {
+  // DexScreener — dedupe + fishy filter
+  const dexEntries = pairsToEntries(bestPairByToken(dexPairs));
+  const dexByMint = new Map();
+  for (const e of dexEntries) {
+    dexByMint.set(e.mint, e);
     if (seen.has(e.mint)) continue;
-    const isPumpOrigin = e.dexId === 'pumpfun';
-    if (!isPumpOrigin && e.liquidityUsd < MIN_LIQUIDITY_USD) continue;
+    if (isFishyDex(e)) continue;
     seen.add(e.mint);
     all.push(e);
+  }
+
+  // Enrich pump.fun entries with DEX liquidity/volume where available
+  for (const e of all) {
+    if (e._source === 'pumpfun' && dexByMint.has(e.mint)) {
+      const d = dexByMint.get(e.mint);
+      e.liquidityUsd = d.liquidityUsd || e.liquidityUsd;
+      e.volume24h    = d.volume24h    || e.volume24h;
+      e.dexId        = d.dexId        || e.dexId;
+    }
   }
 
   // Score against term — symbol gets priority
@@ -392,27 +436,41 @@ function mergeResults(pumpCoins, dexPairs, term) {
     e._score >= MATCH_THRESHOLD || e._exactName || e._exactSym
   );
 
-  if (!relevant.length) return { original: null, vamps: [], all: [] };
+  if (!relevant.length) return { original: null, vamps: [], all: [], counts: { pump: 0, dex: 0 } };
 
-  const ranked = [...relevant].sort(
-    (a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)
-  );
-  return { original: ranked[0], vamps: ranked.slice(1), all: ranked };
+  const ranked = [...relevant].sort((a, b) => trustScore(b) - trustScore(a));
+  const original = ranked[0];
+  const vamps = ranked.slice(1).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
+
+  const counts = {
+    pump: ranked.filter(e => e._source === 'pumpfun').length,
+    dex:  ranked.filter(e => e._source === 'dexscreener').length,
+  };
+  return { original, vamps, all: ranked, counts };
 }
 
 /* ==================== RENDERING ==================== */
-function fallbackThumb(entry) {
-  const label = entry.dexId ? entry.dexId.slice(0, 3).toUpperCase() : 'DEX';
-  return `<div class="dex-thumb" title="Source: ${escapeHTML(entry.dexId || 'DEX')}">${label}</div>`;
+function avatarHash(s) {
+  let h = 0;
+  const str = String(s || '?');
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h % 360;
 }
 
-function imageFor(entry) {
-  if (entry.image) {
-    return `<img src="${escapeHTML(entry.image)}" alt=""
-                 loading="lazy"
-                 onerror="this.outerHTML='${escapeAttr(fallbackThumb(entry))}'">`;
-  }
-  return fallbackThumb(entry);
+/** Gradient letter avatar with img on top. Never blank, always epic. */
+function imageFor(entry, size = 56, radius = 12) {
+  const s = entry.symbol || entry.name || '?';
+  const h = avatarHash(s);
+  const bg    = `linear-gradient(135deg, hsl(${h},65%,24%), hsl(${h},65%,9%))`;
+  const color = `hsl(${h},85%,76%)`;
+  const letter = escapeHTML(String(s).charAt(0).toUpperCase());
+  const fs = Math.round(size * 0.42);
+  const style = `width:${size}px;height:${size}px;border-radius:${radius}px;background:${bg};color:${color};font-size:${fs}px`;
+  const img = validImage(entry.image)
+    ? `<img src="${escapeHTML(entry.image)}" alt="" loading="lazy" decoding="async"
+            referrerpolicy="no-referrer" onerror="this.remove()">`
+    : '';
+  return `<div class="thumb" style="${style}"><span>${letter}</span>${img}</div>`;
 }
 
 function badgeText(entry) {
@@ -431,19 +489,22 @@ function badgeClass(entry) {
 function renderOriginal(entry) {
   const isDex = entry._source === 'dexscreener';
   const cls   = 'orig' + (isDex ? ' king' : '');
+  const sourceLine = isDex
+    ? `DEX match · ${escapeHTML(entry.dexId || 'DEX')}`
+    : (entry.raydium_pool ? 'pump.fun · graduated' : 'pump.fun native');
   return `
     <a class="${cls}" href="${escapeHTML(entry.url)}" target="_blank" rel="noopener">
-      ${imageFor(entry)}
+      ${imageFor(entry, 112, 16)}
       <div class="bd">
         <div class="n">${escapeHTML(entry.name)}</div>
         <div class="s">$${escapeHTML(entry.symbol)}</div>
-        ${isDex ? `<span class="badge b-dex" style="font-size:9px;margin-bottom:4px">DEX</span>` : ''}
-        <div class="s2">
-          ${isDex ? `DEX match · ${escapeHTML(entry.dexId || 'DEX')}` : 'pump.fun native'}
-        </div>
+        ${isDex ? `<span class="badge b-dex" style="font-size:9px;margin-bottom:4px">DEX</span>`
+                : `<span class="badge b-pump" style="font-size:9px;margin-bottom:4px">PUMP</span>`}
+        <div class="s2">${sourceLine}</div>
         <div class="meta">
           <span>MC <b>${formatUsd(entry.marketCap)}</b></span>
-          ${isDex ? `<span>LIQ <b>${formatUsd(entry.liquidityUsd)}</b></span>` : ''}
+          ${entry.liquidityUsd ? `<span>LIQ <b>${formatUsd(entry.liquidityUsd)}</b></span>` : ''}
+          ${entry.volume24h ? `<span>VOL <b>${formatUsd(entry.volume24h)}</b></span>` : ''}
           <span class="mint" data-mint="${escapeHTML(entry.mint)}">
             MINT <b>${escapeHTML(shortMint(entry.mint))}</b>
           </span>
@@ -465,13 +526,14 @@ function renderVampList(vamps) {
         <a class="v" href="${escapeHTML(v.url)}" target="_blank" rel="noopener"
            style="animation-delay:${Math.min(i * 30, 400)}ms">
           <div class="i">${i + 1}</div>
-          ${imageFor(v)}
+          ${imageFor(v, 56, 12)}
           <div class="t">
             ${escapeHTML(v.name)}
             <em>$${escapeHTML(v.symbol)}</em>
             <div class="d">
-              ${v._source === 'dexscreener' ? (escapeHTML(v.dexId || 'dex')) : 'pump.fun'}
+              ${v._source === 'dexscreener' ? escapeHTML(v.dexId || 'dex') : 'pump.fun'}
               · ${formatUsd(v.marketCap)}
+              ${v.liquidityUsd ? ` · LIQ ${formatUsd(v.liquidityUsd)}` : ''}
             </div>
           </div>
           <div class="right">
@@ -501,22 +563,24 @@ async function fetchSuggestions(term) {
       if (!c.mint || merged.has(c.mint)) continue;
       merged.set(c.mint, {
         mint: c.mint, name: c.name, symbol: c.symbol,
-        image: c.image, _source: 'pumpfun',
+        image: validImage(c.image) ? c.image : null,
+        _source: 'pumpfun',
       });
     }
   }
 
   if (dexRes.status === 'fulfilled') {
-    const pairs = bestPairByToken(dexRes.value);
-    for (const p of pairs) {
+    for (const p of bestPairByToken(dexRes.value)) {
       const addr = p.baseToken?.address;
       if (!addr || merged.has(addr)) continue;
-      if ((p.liquidity?.usd ?? 0) < MIN_LIQUIDITY_USD) continue;
+      if ((p.liquidity?.usd ?? 0) < MIN_DEX_LIQUIDITY) continue;
+      if (p.dexId !== 'pumpfun' && (p.volume?.h24 ?? 0) < MIN_DEX_VOLUME &&
+          (p.liquidity?.usd ?? 0) < MIN_DEX_LIQUIDITY * 5) continue;
       merged.set(addr, {
         mint: addr,
         name: p.baseToken.name,
         symbol: p.baseToken.symbol,
-        image: p.info?.imageUrl ?? null,       /* ← real DEX logo */
+        image: validImage(p.info?.imageUrl) ? p.info.imageUrl : null,
         _source: 'dexscreener',
       });
     }
@@ -534,10 +598,7 @@ function renderSuggestions(items, query) {
   }
   sug.innerHTML = items.map(item => `
     <div class="sg" data-mint="${escapeHTML(item.mint)}" role="option">
-      ${item.image
-        ? `<img src="${escapeHTML(item.image)}" alt="" loading="lazy"
-               onerror="this.outerHTML='<div class=&quot;sg-dex-thumb&quot;>DEX</div>'">`
-        : `<div class="sg-dex-thumb">DEX</div>`}
+      ${imageFor(item, 38, 9)}
       <div>
         <b>${escapeHTML(item.name)}</b><em>$${escapeHTML(item.symbol)}</em>
         <small>${item._source === 'dexscreener' ? 'DexScreener' : 'pump.fun'}
@@ -546,7 +607,7 @@ function renderSuggestions(items, query) {
     </div>
   `).join('');
   sug.style.display = 'block';
-  sug.querySelectorAll('.sg').forEach(node => {
+  sug.querySelectorAll('.sg[data-mint]').forEach(node => {
     node.addEventListener('click', () => {
       const mint = node.dataset.mint;
       document.getElementById('q').value = mint;
@@ -563,8 +624,10 @@ async function hunt(term) {
   if (!q) return;
 
   hunting = true;
+  const biteEl   = document.getElementById('bite');
   const resultEl = document.getElementById('result');
   const statusEl = document.getElementById('status');
+  biteEl.disabled = true;
   statusEl.innerHTML = `<span class="pulse">🩸</span> Scanning pump.fun + DexScreener…`;
   resultEl.innerHTML = '';
 
@@ -583,22 +646,43 @@ async function hunt(term) {
         ? pairsToEntries(bestPairByToken(resolved.pairs))[0]
         : pumpToEntries([resolved.coin])[0];
 
+      if (!entry) {
+        statusEl.innerHTML = `<span class="err">Could not parse token data.</span>`;
+        return;
+      }
+
+      // Enrich pump.fun entry with DEX data if available
+      if (entry._source === 'pumpfun') {
+        try {
+          const r = await fetchJSON(`${DEX_BASE}/latest/dex/tokens/${entry.mint}`, suggestAbort?.signal);
+          const pairs = (r?.pairs ?? []).filter(p => p.chainId === 'solana');
+          const best = bestPairByToken(pairs)[0];
+          if (best) {
+            entry.liquidityUsd = best.liquidity?.usd ?? 0;
+            entry.volume24h    = best.volume?.h24 ?? 0;
+            entry.dexId        = best.dexId || entry.dexId;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
       // Find lookalikes by the resolved token's name
+      const lookTerm = entry.name || entry.symbol || q;
       const [lookPump, lookDex] = await Promise.allSettled([
-        searchPumpFun(entry.name || entry.symbol),
-        searchDexScreener(entry.name || entry.symbol),
+        searchPumpFun(lookTerm),
+        searchDexScreener(lookTerm),
       ]);
 
       const lookMerged = mergeResults(
         lookPump.status === 'fulfilled' ? lookPump.value : [],
         lookDex.status  === 'fulfilled' ? lookDex.value  : [],
-        entry.name || entry.symbol
+        lookTerm
       );
 
       merged = {
         original: entry,
         vamps: lookMerged.all.filter(e => e.mint !== entry.mint),
         all: lookMerged.all,
+        counts: lookMerged.counts,
       };
     } else {
       // ---------- Name / ticker search path ----------
@@ -613,12 +697,14 @@ async function hunt(term) {
       );
     }
 
-    statusEl.innerHTML = '';
-
     if (!merged.original) {
       statusEl.innerHTML = `<span class="err">No matches. Try a different name, ticker or address.</span>`;
       return;
     }
+
+    const total = 1 + merged.vamps.length;
+    statusEl.innerHTML = `<span style="color:var(--gold)">Found ${total} relevant token${total === 1 ? '' : 's'}</span>
+      <small>${merged.counts.pump} pump.fun · ${merged.counts.dex} DEX</small>`;
 
     resultEl.innerHTML = renderOriginal(merged.original) + renderVampList(merged.vamps);
 
@@ -651,6 +737,7 @@ async function hunt(term) {
     statusEl.innerHTML = `<span class="err">Scan failed: ${escapeHTML(err.message)}</span>`;
   } finally {
     hunting = false;
+    biteEl.disabled = false;
   }
 }
 
