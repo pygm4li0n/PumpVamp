@@ -82,12 +82,14 @@ padding:12px 16px;text-decoration:none;color:inherit;transition:.2s;animation:ri
 .v .i{font-family:Cinzel;color:#5d3a42;font-size:15px;text-align:center}
 .v .t{font-weight:600;overflow-wrap:anywhere}.v .t em{font-style:normal;color:var(--blood2);margin-left:8px;font-size:13px}
 .v .d{font-size:12px;color:var(--mute);margin-top:3px}
-.badge{font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:99px;font-family:Cinzel;font-weight:600;white-space:nowrap}
+.badge{font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:99px;font-family:Cinzel;font-weight:600;white-space:nowrap;display:inline-block}
 .b-same{background:#b0001e;color:#fff}
 .b-tick{background:#7a1a55;color:#fff}
 .b-sim{background:#2b1a05;color:var(--gold);border:1px solid #5c4210}
 .b-dex{background:#0a1a2e;color:#4a9eff;border:1px solid #1a3a5a}
 .b-pump{background:#1a0a2e;color:#b06cff;border:1px solid #3a1a5a}
+.b-old{background:#0f2a10;color:#6ee76e;border:1px solid #2a5a2a}
+.b-mc{background:#2a1f05;color:#f5c542;border:1px solid #6b4f0d}
 .right{text-align:right;display:grid;gap:6px;justify-items:end}.score{font-size:11px;color:var(--mute)}
 footer{text-align:center;color:#5d4a4e;font-size:12px;padding:30px;position:relative;z-index:2;letter-spacing:2px;font-family:Cinzel}
 @media(max-width:640px){.orig{flex-direction:column;text-align:center}.meta{justify-content:center}.v{grid-template-columns:30px 48px 1fr}.v .right{grid-column:2/4;justify-items:start;text-align:left}.search{flex-direction:column}.bite{padding:14px}}
@@ -103,7 +105,7 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .fog.b{top:auto;bottom:0;animation-duration:55s;animation-direction:alternate-reverse}
 @keyframes drift{from{transform:translateX(-7%)}to{transform:translateX(7%)}}
 #embers{position:fixed;inset:0;z-index:1;pointer-events:none}
-.sub{margin-top:0}.tag{max-width:520px;margin-inline:auto;font-size:14px}
+.sub{margin-top:0}.tag{max-width:540px;margin-inline:auto;font-size:14px}
 .search{box-shadow:0 0 60px #b0001e40,inset 0 0 0 1px #ffffff08}.search:focus-within{border-color:var(--blood2)}
 #sug{display:none;position:absolute;left:0;right:0;top:calc(100% + 8px);background:#0c0409f5;border:1px solid #5a1020;border-radius:14px;overflow:hidden;z-index:20;box-shadow:0 24px 60px #000}
 .sg{display:flex;gap:12px;align-items:center;padding:10px 14px;cursor:pointer;transition:background .15s}
@@ -123,11 +125,25 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 .pulse{display:inline-block;animation:pl 1.2s ease-in-out infinite}@keyframes pl{50%{transform:scale(1.25);opacity:.6}}
 .hint{margin:10px 2px 0;color:var(--mute);font-size:12px}.hint b{color:var(--bone)}
 
-/* Gradient letter avatar — sits behind the img, never blank */
+/* ===== EPIC STATS STRIP ===== */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}
+.stat{background:linear-gradient(160deg,#160810,#0a0407);border:1px solid #2a0f18;border-radius:16px;padding:16px 12px;text-align:center;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,currentColor,transparent 70%);opacity:.10;pointer-events:none}
+.stat .k{font-family:Cinzel;font-size:10px;letter-spacing:3px;color:var(--mute);text-transform:uppercase;position:relative}
+.stat .v{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--bone);margin-top:6px;overflow-wrap:anywhere;position:relative;line-height:1.15}
+.stat .sub2{font-size:11px;color:var(--mute);margin-top:4px;position:relative}
+.stat.old{color:#6ee76e}.stat.old .v{color:#8ff58f}
+.stat.mc{color:#f5c542}.stat.mc .v{color:#f5c542}
+.stat.mt{color:var(--blood2)}.stat.mt .v{color:#ff556e}
+@media(max-width:640px){.stats{grid-template-columns:1fr}}
+
+/* ===== EPIC AVATAR (always visible) ===== */
 .thumb{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;
-  font-family:'Cinzel Decorative',serif;font-weight:700;text-align:center;line-height:1;letter-spacing:0}
-.thumb>span{position:relative;z-index:0}
-.thumb>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+  font-family:'Cinzel Decorative',serif;font-weight:700;text-align:center;line-height:1;letter-spacing:0;
+  border:1px solid #ffffff18}
+.thumb>span{position:relative;z-index:0;text-shadow:0 0 12px currentColor,0 0 4px currentColor}
+.thumb>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000}
+.thumb::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px #ffffff14;pointer-events:none;z-index:2}
 </style>
 </head>
 <body>
@@ -139,7 +155,7 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
   <div class="logo" aria-hidden="true">🦇</div>
   <h1>VAMP PUMP</h1>
   <div class="sub">Find the Original</div>
-  <p class="tag">Search any ticker, name or Solana address. We cross-check <b>pump.fun</b> and <b>DexScreener</b>, filter dust-liquidity fakes, and surface the real coin — then line up the copycats.</p>
+  <p class="tag">Every result is a <b>pump.fun contract</b> (mint ends in <b>pump</b>). We surface the <b>oldest</b>, <b>highest MC</b>, and <b>best match</b> — then line up the copycat bloodsuckers.</p>
   <div class="drips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 </header>
 
@@ -161,9 +177,10 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
     <button class="chip" data-q="cat">cat</button>
   </div>
 
-  <p class="hint">Filters DEX-only tokens below <b>$10K</b> liquidity or with <b>no 24h volume</b>. pump.fun natives are always kept.</p>
+  <p class="hint">🔒 <b>Pump-only</b> · mints ending in <b>pump</b> · pump.fun natives always kept, DEX-only outsiders excluded.</p>
 
   <div class="status" id="status"></div>
+  <div id="stats"></div>
   <div id="result"></div>
 
   <h2>RECENT HUNTS</h2>
@@ -171,7 +188,7 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 
   <div class="scan">
     <span class="pulse">🩸</span>
-    <span>Sources: <b>pump.fun</b> · <b>DexScreener</b></span>
+    <span>Sources: <b>pump.fun</b> · <b>DexScreener</b> · pump-contracts only</span>
   </div>
 </main>
 
@@ -182,14 +199,10 @@ header::before{content:"";position:absolute;left:50%;top:10px;width:640px;height
 const SUPABASE_URL = 'https://zecjwdslfvqomwwfnesh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5U3g577H9J--jWQ45fqy2Q_Tltg8Mc8';
 const PUMP_PROXY   = 'https://zecjwdslfvqomwwfnesh.supabase.co/functions/v1/pump-proxy?url=';
-const MIN_DEX_LIQUIDITY = 10000;   // $10k — no fishy dust pools
-const MIN_DEX_VOLUME    = 5000;    // $5k 24h volume required
-const MIN_DEX_AGE_MS    = 5 * 60 * 1000; // 5 min — skip fresh rug pairs
 const SUGGEST_DEBOUNCE_MS = 250;
 const SUGGEST_LIMIT       = 8;
-const MATCH_THRESHOLD     = 0.55;
+const MATCH_THRESHOLD     = 0.50;
 const SYMBOL_BOOST        = 1.3;
-const PUMP_BOOST          = 1e12;  // pump.fun always beats DEX for "original"
 const PUMP_BASE = 'https://frontend-api-v3.pump.fun';
 const DEX_BASE  = 'https://api.dexscreener.com';
 
@@ -247,8 +260,23 @@ function formatUsd(n) {
   if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
   return '$' + Math.round(n);
 }
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  if (isNaN(d.getTime()) || d.getFullYear() < 2020) return '—';
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
 function validImage(url) {
   return typeof url === 'string' && /^https?:\/\//i.test(url) && url.length < 2048;
+}
+
+/** A token is a pump.fun contract if its mint ends in "pump" or we know it came from pump.fun. */
+function isPumpContract(e) {
+  if (!e) return false;
+  if (e._source === 'pumpfun') return true;
+  if (e.dexId === 'pumpfun') return true;
+  if (typeof e.mint === 'string' && e.mint.toLowerCase().endsWith('pump')) return true;
+  return false;
 }
 
 /* ==================== FETCH LAYER ==================== */
@@ -293,20 +321,17 @@ async function searchDexScreener(term, signal) {
 }
 
 async function resolveByAddress(address, signal) {
-  // 1) DexScreener token-pairs endpoint — covers all Solana tokens
   try {
     const r = await fetchJSON(`${DEX_BASE}/latest/dex/tokens/${address}`, signal);
     const pairs = (r?.pairs ?? []).filter(p => p.chainId === 'solana');
     if (pairs.length) return { source: 'dexscreener', pairs };
   } catch (e) { /* fall through */ }
 
-  // 2) pump.fun direct coin lookup
   try {
     const coin = await fetchJSON(pumpUrl(`/coins/${address}`), signal);
     if (coin?.mint) return { source: 'pumpfun', coin };
   } catch (e) { /* fall through */ }
 
-  // 3) DexScreener search fallback
   try {
     const pairs = await searchDexScreener(address, signal);
     const hit = bestPairByToken(pairs).find(p => p.baseToken?.address === address);
@@ -366,62 +391,43 @@ function pairsToEntries(pairs) {
   }));
 }
 
-/** A DEX-only entry is "fishy" if it's too new, too illiquid, or has no volume. */
-function isFishyDex(e) {
-  if (e._source !== 'dexscreener') return false;
-  if (e.dexId === 'pumpfun') return false; // pump.fun pairs on DEX are legit
-  const liq = e.liquidityUsd ?? 0;
-  const vol = e.volume24h ?? 0;
-  if (liq < MIN_DEX_LIQUIDITY) return true;
-  if (vol < MIN_DEX_VOLUME && liq < MIN_DEX_LIQUIDITY * 5) return true;
-  if (e.createdAt && Date.now() - e.createdAt < MIN_DEX_AGE_MS) return true;
-  return false;
-}
-
-function trustScore(e) {
-  let score = e.marketCap ?? 0;
-  if (e._source === 'pumpfun') {
-    score += PUMP_BOOST;
-    if (e.raydium_pool) score += 1e10;     // graduated = more legit
-    if (e.complete)      score += 5e9;
-  }
-  score += (e.liquidityUsd ?? 0) * 3;
-  return score;
-}
-
+/**
+ * Merge pump.fun + DEX, keep ONLY pump contracts, enrich, score.
+ * Original selection: best match → oldest → highest MC.
+ * Vamps: sorted by highest MC.
+ */
 function mergeResults(pumpCoins, dexPairs, term) {
   const seen = new Set();
   const all  = [];
 
-  // pump.fun first
   for (const e of pumpToEntries(pumpCoins)) {
     if (seen.has(e.mint)) continue;
     seen.add(e.mint);
     all.push(e);
   }
 
-  // DexScreener — dedupe + fishy filter
   const dexEntries = pairsToEntries(bestPairByToken(dexPairs));
   const dexByMint = new Map();
   for (const e of dexEntries) {
     dexByMint.set(e.mint, e);
     if (seen.has(e.mint)) continue;
-    if (isFishyDex(e)) continue;
+    if (!isPumpContract(e)) continue;   // 🔒 pump contracts only
     seen.add(e.mint);
     all.push(e);
   }
 
-  // Enrich pump.fun entries with DEX liquidity/volume where available
+  // Enrich pump entries with DEX liq/vol/date when available
   for (const e of all) {
-    if (e._source === 'pumpfun' && dexByMint.has(e.mint)) {
+    if (dexByMint.has(e.mint)) {
       const d = dexByMint.get(e.mint);
-      e.liquidityUsd = d.liquidityUsd || e.liquidityUsd;
-      e.volume24h    = d.volume24h    || e.volume24h;
-      e.dexId        = d.dexId        || e.dexId;
+      if (!e.liquidityUsd) e.liquidityUsd = d.liquidityUsd;
+      if (!e.volume24h)    e.volume24h    = d.volume24h;
+      if (!e.createdAt)    e.createdAt    = d.createdAt;
+      if (!e.dexId)        e.dexId        = d.dexId;
     }
   }
 
-  // Score against term — symbol gets priority
+  // Score against term
   for (const e of all) {
     const nSim = similarity(e.name, term);
     const sSim = similarity(e.symbol, term);
@@ -433,20 +439,40 @@ function mergeResults(pumpCoins, dexPairs, term) {
   }
 
   const relevant = all.filter(e =>
-    e._score >= MATCH_THRESHOLD || e._exactName || e._exactSym
+    isPumpContract(e) &&
+    (e._score >= MATCH_THRESHOLD || e._exactName || e._exactSym)
   );
 
-  if (!relevant.length) return { original: null, vamps: [], all: [], counts: { pump: 0, dex: 0 } };
+  if (!relevant.length) {
+    return { original: null, vamps: [], all: [], stats: null, counts: { pump: 0 } };
+  }
 
-  const ranked = [...relevant].sort((a, b) => trustScore(b) - trustScore(a));
+  // 👑 Original: best match, then oldest, then highest MC
+  const ranked = [...relevant].sort((a, b) => {
+    if (a._exactSym !== b._exactSym)   return b._exactSym ? 1 : -1;
+    if (a._exactName !== b._exactName) return b._exactName ? 1 : -1;
+    if (Math.abs(a._score - b._score) > 0.001) return b._score - a._score;
+    const at = a.createdAt || Infinity, bt = b.createdAt || Infinity;
+    if (at !== bt) return at - bt;
+    return (b.marketCap || 0) - (a.marketCap || 0);
+  });
   const original = ranked[0];
-  const vamps = ranked.slice(1).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
 
-  const counts = {
-    pump: ranked.filter(e => e._source === 'pumpfun').length,
-    dex:  ranked.filter(e => e._source === 'dexscreener').length,
+  // 🩸 Vamps: highest MC first
+  const vamps = ranked.slice(1).sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
+  // 📊 Stats across the whole relevant set
+  const oldest  = relevant.reduce((m, e) => (e.createdAt && (!m || e.createdAt < m.createdAt)) ? e : m, null);
+  const topMc   = relevant.reduce((m, e) => ((e.marketCap || 0) > (m?.marketCap || 0)) ? e : m, null);
+  const best    = relevant.reduce((m, e) => (e._score > (m?._score || 0)) ? e : m, null);
+
+  return {
+    original,
+    vamps,
+    all: relevant,
+    stats: { oldest, topMc, best },
+    counts: { pump: relevant.length },
   };
-  return { original, vamps, all: ranked, counts };
 }
 
 /* ==================== RENDERING ==================== */
@@ -457,50 +483,74 @@ function avatarHash(s) {
   return h % 360;
 }
 
-/** Gradient letter avatar with img on top. Never blank, always epic. */
-function imageFor(entry, size = 56, radius = 12) {
+/** Epic gradient letter avatar — always visible, img layered on top. */
+function avatar(entry, size = 56, radius = 12) {
   const s = entry.symbol || entry.name || '?';
   const h = avatarHash(s);
-  const bg    = `linear-gradient(135deg, hsl(${h},65%,24%), hsl(${h},65%,9%))`;
-  const color = `hsl(${h},85%,76%)`;
+  const h2 = (h + 55) % 360;
+  const fs = Math.round(size * 0.44);
   const letter = escapeHTML(String(s).charAt(0).toUpperCase());
-  const fs = Math.round(size * 0.42);
-  const style = `width:${size}px;height:${size}px;border-radius:${radius}px;background:${bg};color:${color};font-size:${fs}px`;
+  const style =
+    `width:${size}px;height:${size}px;border-radius:${radius}px;` +
+    `background:linear-gradient(140deg,hsl(${h} 72% 30%) 0%,hsl(${h2} 70% 12%) 100%);` +
+    `color:hsl(${h} 95% 82%);font-size:${fs}px;` +
+    `box-shadow:inset 0 0 18px hsl(${h} 90% 50% / .40),0 0 14px hsl(${h} 90% 30% / .30);`;
   const img = validImage(entry.image)
     ? `<img src="${escapeHTML(entry.image)}" alt="" loading="lazy" decoding="async"
             referrerpolicy="no-referrer" onerror="this.remove()">`
     : '';
-  return `<div class="thumb" style="${style}"><span>${letter}</span>${img}</div>`;
+  return `<div class="thumb" style="${style}" aria-hidden="true"><span>${letter}</span>${img}</div>`;
 }
 
 function badgeText(entry) {
   if (entry._exactSym)  return 'TICKER';
   if (entry._exactName) return 'SAME NAME';
-  if (entry._source === 'dexscreener') return 'DEX';
   return 'SIMILAR';
 }
 function badgeClass(entry) {
   if (entry._exactSym)  return 'b-tick';
   if (entry._exactName) return 'b-same';
-  if (entry._source === 'dexscreener') return 'b-dex';
   return 'b-sim';
+}
+
+function renderStats(stats) {
+  if (!stats) return '';
+  const { oldest, topMc, best } = stats;
+  return `
+    <div class="stats">
+      <div class="stat old">
+        <div class="k">🕰️ Oldest</div>
+        <div class="v">${escapeHTML(formatDate(oldest?.createdAt))}</div>
+        <div class="sub2">${escapeHTML(oldest?.symbol || '—')} · $${escapeHTML(oldest?.symbol || '')}</div>
+      </div>
+      <div class="stat mc">
+        <div class="k">💰 Top MC</div>
+        <div class="v">${formatUsd(topMc?.marketCap)}</div>
+        <div class="sub2">${escapeHTML(topMc?.name || '—')}</div>
+      </div>
+      <div class="stat mt">
+        <div class="k">🎯 Best Match</div>
+        <div class="v">${Math.round((best?._score || 0) * 100)}%</div>
+        <div class="sub2">${escapeHTML(best?.name || '—')}</div>
+      </div>
+    </div>
+  `;
 }
 
 function renderOriginal(entry) {
   const isDex = entry._source === 'dexscreener';
   const cls   = 'orig' + (isDex ? ' king' : '');
   const sourceLine = isDex
-    ? `DEX match · ${escapeHTML(entry.dexId || 'DEX')}`
+    ? `DEX · ${escapeHTML(entry.dexId || 'DEX')}`
     : (entry.raydium_pool ? 'pump.fun · graduated' : 'pump.fun native');
   return `
     <a class="${cls}" href="${escapeHTML(entry.url)}" target="_blank" rel="noopener">
-      ${imageFor(entry, 112, 16)}
+      ${avatar(entry, 112, 16)}
       <div class="bd">
         <div class="n">${escapeHTML(entry.name)}</div>
         <div class="s">$${escapeHTML(entry.symbol)}</div>
-        ${isDex ? `<span class="badge b-dex" style="font-size:9px;margin-bottom:4px">DEX</span>`
-                : `<span class="badge b-pump" style="font-size:9px;margin-bottom:4px">PUMP</span>`}
-        <div class="s2">${sourceLine}</div>
+        <span class="badge b-pump" style="font-size:9px;margin-bottom:4px">PUMP</span>
+        <div class="s2">${sourceLine} · created ${escapeHTML(formatDate(entry.createdAt))}</div>
         <div class="meta">
           <span>MC <b>${formatUsd(entry.marketCap)}</b></span>
           ${entry.liquidityUsd ? `<span>LIQ <b>${formatUsd(entry.liquidityUsd)}</b></span>` : ''}
@@ -511,7 +561,6 @@ function renderOriginal(entry) {
         </div>
       </div>
     </a>
-    ${isDex ? `<div class="kingnote">DEX-only winner — no pump.fun original found</div>` : ''}
   `;
 }
 
@@ -519,29 +568,41 @@ function renderVampList(vamps) {
   if (!vamps.length) {
     return `<div class="status">No copycats found. Suspiciously clean. 🩸</div>`;
   }
+
+  // Flag oldest & top-mc among the vamps so the eye finds them fast
+  const oldestVamp = vamps.reduce((m, e) => (e.createdAt && (!m || e.createdAt < m.createdAt)) ? e : m, null);
+  const topMcVamp  = vamps.reduce((m, e) => ((e.marketCap || 0) > (m?.marketCap || 0)) ? e : m, null);
+
   return `
     <h2>BLOODSUCKERS (${vamps.length})</h2>
     <div class="list">
-      ${vamps.map((v, i) => `
+      ${vamps.map((v, i) => {
+        const isOld = oldestVamp && v.mint === oldestVamp.mint;
+        const isMc  = topMcVamp  && v.mint === topMcVamp.mint;
+        return `
         <a class="v" href="${escapeHTML(v.url)}" target="_blank" rel="noopener"
-           style="animation-delay:${Math.min(i * 30, 400)}ms">
+           style="animation-delay:${Math.min(i * 28, 400)}ms">
           <div class="i">${i + 1}</div>
-          ${imageFor(v, 56, 12)}
+          ${avatar(v, 56, 12)}
           <div class="t">
             ${escapeHTML(v.name)}
             <em>$${escapeHTML(v.symbol)}</em>
             <div class="d">
-              ${v._source === 'dexscreener' ? escapeHTML(v.dexId || 'dex') : 'pump.fun'}
-              · ${formatUsd(v.marketCap)}
+              pump · ${escapeHTML(formatDate(v.createdAt))}
+              · MC ${formatUsd(v.marketCap)}
               ${v.liquidityUsd ? ` · LIQ ${formatUsd(v.liquidityUsd)}` : ''}
             </div>
           </div>
           <div class="right">
-            <span class="badge ${badgeClass(v)}">${badgeText(v)}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+              ${isOld ? `<span class="badge b-old">OLDEST</span>` : ''}
+              ${isMc  ? `<span class="badge b-mc">TOP MC</span>` : ''}
+              <span class="badge ${badgeClass(v)}">${badgeText(v)}</span>
+            </div>
             <div class="score">${Math.round(v._score * 100)}% match</div>
           </div>
-        </a>
-      `).join('')}
+        </a>`;
+      }).join('')}
     </div>
   `;
 }
@@ -573,15 +634,13 @@ async function fetchSuggestions(term) {
     for (const p of bestPairByToken(dexRes.value)) {
       const addr = p.baseToken?.address;
       if (!addr || merged.has(addr)) continue;
-      if ((p.liquidity?.usd ?? 0) < MIN_DEX_LIQUIDITY) continue;
-      if (p.dexId !== 'pumpfun' && (p.volume?.h24 ?? 0) < MIN_DEX_VOLUME &&
-          (p.liquidity?.usd ?? 0) < MIN_DEX_LIQUIDITY * 5) continue;
+      if (!addr.toLowerCase().endsWith('pump') && p.dexId !== 'pumpfun') continue; // pump only
       merged.set(addr, {
         mint: addr,
         name: p.baseToken.name,
         symbol: p.baseToken.symbol,
         image: validImage(p.info?.imageUrl) ? p.info.imageUrl : null,
-        _source: 'dexscreener',
+        _source: p.dexId === 'pumpfun' ? 'pumpfun' : 'dexscreener',
       });
     }
   }
@@ -592,13 +651,13 @@ async function fetchSuggestions(term) {
 function renderSuggestions(items, query) {
   const sug = document.getElementById('sug');
   if (!items.length) {
-    sug.innerHTML = `<div class="sg none">No matches for "${escapeHTML(query)}"</div>`;
+    sug.innerHTML = `<div class="sg none">No pump contracts for "${escapeHTML(query)}"</div>`;
     sug.style.display = 'block';
     return;
   }
   sug.innerHTML = items.map(item => `
     <div class="sg" data-mint="${escapeHTML(item.mint)}" role="option">
-      ${imageFor(item, 38, 9)}
+      ${avatar(item, 38, 9)}
       <div>
         <b>${escapeHTML(item.name)}</b><em>$${escapeHTML(item.symbol)}</em>
         <small>${item._source === 'dexscreener' ? 'DexScreener' : 'pump.fun'}
@@ -626,16 +685,17 @@ async function hunt(term) {
   hunting = true;
   const biteEl   = document.getElementById('bite');
   const resultEl = document.getElementById('result');
+  const statsEl  = document.getElementById('stats');
   const statusEl = document.getElementById('status');
   biteEl.disabled = true;
-  statusEl.innerHTML = `<span class="pulse">🩸</span> Scanning pump.fun + DexScreener…`;
+  statusEl.innerHTML = `<span class="pulse">🩸</span> Scanning pump.fun contracts…`;
   resultEl.innerHTML = '';
+  statsEl.innerHTML  = '';
 
   try {
     let merged;
 
     if (isAddress(q)) {
-      // ---------- Address resolution path ----------
       const resolved = await resolveByAddress(q);
       if (!resolved) {
         statusEl.innerHTML = `<span class="err">Address not found on pump.fun or DexScreener.</span>`;
@@ -651,21 +711,21 @@ async function hunt(term) {
         return;
       }
 
-      // Enrich pump.fun entry with DEX data if available
+      // Enrich pump entry with DEX data
       if (entry._source === 'pumpfun') {
         try {
-          const r = await fetchJSON(`${DEX_BASE}/latest/dex/tokens/${entry.mint}`, suggestAbort?.signal);
+          const r = await fetchJSON(`${DEX_BASE}/latest/dex/tokens/${entry.mint}`);
           const pairs = (r?.pairs ?? []).filter(p => p.chainId === 'solana');
           const best = bestPairByToken(pairs)[0];
           if (best) {
             entry.liquidityUsd = best.liquidity?.usd ?? 0;
             entry.volume24h    = best.volume?.h24 ?? 0;
             entry.dexId        = best.dexId || entry.dexId;
+            if (!entry.createdAt) entry.createdAt = best.pairCreatedAt ?? 0;
           }
         } catch (e) { /* ignore */ }
       }
 
-      // Find lookalikes by the resolved token's name
       const lookTerm = entry.name || entry.symbol || q;
       const [lookPump, lookDex] = await Promise.allSettled([
         searchPumpFun(lookTerm),
@@ -678,14 +738,17 @@ async function hunt(term) {
         lookTerm
       );
 
+      const vamps = lookMerged.all.filter(e => e.mint !== entry.mint)
+                                 .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
       merged = {
         original: entry,
-        vamps: lookMerged.all.filter(e => e.mint !== entry.mint),
-        all: lookMerged.all,
-        counts: lookMerged.counts,
+        vamps,
+        all: [entry, ...vamps],
+        stats: lookMerged.stats || null,
+        counts: { pump: 1 + vamps.length },
       };
     } else {
-      // ---------- Name / ticker search path ----------
       const [pumpRes, dexRes] = await Promise.allSettled([
         searchPumpFun(q),
         searchDexScreener(q),
@@ -698,17 +761,17 @@ async function hunt(term) {
     }
 
     if (!merged.original) {
-      statusEl.innerHTML = `<span class="err">No matches. Try a different name, ticker or address.</span>`;
+      statusEl.innerHTML = `<span class="err">No pump contracts matched. Try a different name, ticker or address.</span>`;
       return;
     }
 
     const total = 1 + merged.vamps.length;
-    statusEl.innerHTML = `<span style="color:var(--gold)">Found ${total} relevant token${total === 1 ? '' : 's'}</span>
-      <small>${merged.counts.pump} pump.fun · ${merged.counts.dex} DEX</small>`;
+    statusEl.innerHTML = `<span style="color:var(--gold)">Found ${total} pump contract${total === 1 ? '' : 's'}</span>
+      <small>🔒 pump-only · mint ends in "pump"</small>`;
 
+    if (merged.stats) statsEl.innerHTML = renderStats(merged.stats);
     resultEl.innerHTML = renderOriginal(merged.original) + renderVampList(merged.vamps);
 
-    // Copy-mint handlers
     resultEl.querySelectorAll('.mint').forEach(node => {
       node.addEventListener('click', e => {
         e.preventDefault();
@@ -722,7 +785,6 @@ async function hunt(term) {
       });
     });
 
-    // Log to Supabase
     if (supabase) {
       supabase.from('hunts').insert({
         term: q,
@@ -806,7 +868,7 @@ async function loadCrypt() {
   tick();
 })();
 
-/* ==================== WIRE UP EVENTS ==================== */
+/* ==================== WIRE UP ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('q');
   const bite  = document.getElementById('bite');
@@ -830,10 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      sug.style.display = 'none';
-      hunt(input.value);
-    }
+    if (e.key === 'Enter') { sug.style.display = 'none'; hunt(input.value); }
     if (e.key === 'Escape') sug.style.display = 'none';
   });
 
