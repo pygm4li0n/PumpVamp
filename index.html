@@ -292,16 +292,28 @@ async function getAny(m){
   }catch(e){}
   throw new Error('That CA was not found on pump.fun or DexScreener — it may be brand new, mistyped, or not a Solana token');
 }
-async function hunt(raw){
+// hint: optional coin object {mint,name,symbol,usd_market_cap,created_timestamp,...} from the UI,
+// used as a fallback when the CA lookup misses (brand-new tokens, transient 404s).
+async function hunt(raw, hint){
   raw = (raw||'').trim(); if(!raw) return;
   const id = ++run; document.body.classList.add('hunted'); history.replaceState(null,'','#'+encodeURIComponent(raw)); $('sug').style.display='none'; $('go').disabled = true;
   $('out').innerHTML = '<div class="status"><span class="pulse">🦇</span><br>SNIFFING THE BLOODLINE…</div>';
   try{
     let q, label, terms, ref=null;
     if(MINT.test(raw)){
-      ref = await getAny(raw);
+      try {
+        ref = await getAny(raw);
+      } catch(err) {
+        // New token, transient 404, or proxy hiccup — fall back to the hint the UI handed us.
+        if (hint && hint.name && (!hint.mint || hint.mint === raw)) {
+          console.warn('[hunt] CA lookup failed (' + err.message + ') — checking by name/ticker "' + hint.name + '" / $' + hint.symbol);
+          ref = { ...hint, mint: raw, _dex: false, _fallback: true };
+        } else {
+          throw err;
+        }
+      }
       q = {mode:'name', nn:norm(ref.name), words:words(ref.name), sym:norm(ref.symbol)};
-      label = ref.name; terms = [...new Set([ref.name, ref.symbol])]; $('q').value = ref.name;
+      label = ref.name; terms = [...new Set([ref.name, ref.symbol].filter(Boolean))]; $('q').value = ref.name;
     } else if(raw[0]==='$'){
       const t = raw.slice(1).trim(); if(!t) throw new Error('Type a ticker after the $');
       q = {mode:'ticker', sym:norm(t)}; label = '$'+t; terms = [t];
@@ -477,12 +489,13 @@ $('q').addEventListener('input',()=>{
       const [pfx, dx] = await Promise.all([fetchPage(term,0,'market_cap','DESC',50).catch(()=>[]), dexTokens(term)]); if(n!==sN) return;
       const seen = new Set();
       const list = [...pfx, ...dx.filter(c=>(c._liq||0)>=1000)].filter(c=>m(c)&&!seen.has(c.mint)&&seen.add(c.mint)).sort((a,b)=>mc(b)-mc(a)).slice(0,6);
-      sug.innerHTML = list.length ? list.map(c=>`<div class="sg" data-m="${esc(c.mint)}">${av(c)}<div><b>${esc(c.name)}</b><em>$${esc(c.symbol)}</em>${c._dex?'<span class="src">DEX</span>':''}<small>MC ${usd(mc(c))} · ${ago(Date.now()-ts(c))} old</small></div></div>`).join('') : '<div class="sg none">No exact match yet…</div>';
+            sug.innerHTML = list.length ? list.map(c=>`<div class="sg" data-m="${esc(c.mint)}">${av(c)}<div><b>${esc(c.name)}</b><em>$${esc(c.symbol)}</em>${c._dex?'<span class="src">DEX</span>':''}<small>MC ${usd(mc(c))} · ${ago(Date.now()-ts(c))} old</small></div></div>`).join('') : '<div class="sg none">No exact match yet…</div>';
+      sug.querySelectorAll('.sg[data-m]').forEach((el,i)=>{ el.__coin = list[i]; });
       sug.style.display='block';
     }catch(e){ sug.style.display='none'; }
   },350);
 });
-sug.addEventListener('mousedown',e=>{ const d=e.target.closest('.sg[data-m]'); if(d){ e.preventDefault(); hunt(d.dataset.m); } });
+sug.addEventListener('mousedown',e=>{ const d=e.target.closest('.sg[data-m]'); if(d){ e.preventDefault(); hunt(d.dataset.m, d.__coin); } });
 document.addEventListener('click',e=>{ if(!e.target.closest('.search')) sug.style.display='none'; });
 $('go').onclick = ()=>hunt($('q').value);
 function home(){ run++; state=null; document.body.classList.remove('hunted'); $('out').innerHTML=EMPTY; $('q').value=''; $('go').disabled=false; $('sug').style.display='none';
@@ -507,7 +520,7 @@ async function fresh(){
     if (!l.length) { el.innerHTML = '<div class="empty">waiting for fresh launches…</div>'; return; }
     freshFails = 0;
     el.innerHTML = l.map(c=>`<div class="fc" data-m="${esc(c.mint)}">${av(c)}<div class="fi"><b>${esc(c.name)}</b><em>$${esc(c.symbol)}</em></div><small>${ago(Date.now()-ts(c))}</small></div>`).join('');
-    document.querySelectorAll('#fresh .fc').forEach(d=>d.onclick=()=>hunt(d.dataset.m));
+document.querySelectorAll('#fresh .fc').forEach((d,i)=>{ d.__coin = l[i]; d.onclick=()=>hunt(d.dataset.m, d.__coin); });
   } catch(e) {
     freshFails++;
     const proxyIssue = /401|403|proxy|unreachable/i.test(e.message);
